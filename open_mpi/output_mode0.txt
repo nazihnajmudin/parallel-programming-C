@@ -1,0 +1,22 @@
+Gambar berhasil dimuat: 200x356
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 49
+Proses 1: baris 50 - 99
+Proses 2: baris 100 - 149
+Proses 3: baris 150 - 199
+Hasil berhasil disimpan ke output_birds.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/birds.jpg
+File Output: output_birds.jpg
+Dimensi Gambar: 200x356
+Mode Operasi: 0
+Jumlah Proses MPI: 4
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.146238 detik
+Processing Time: 0.0118601 detik
+Output Time: 0.0194433 detik
+Total Time: 0.177541 detik
+========================

@@ -1,4 +1,4 @@
-# Parallelization Report — Sobel Edge Detection with OpenMPI
+`# Parallelization Report — Sobel Edge Detection with OpenMPI
 
 ## Team Information
 - **Team ID:**  
@@ -32,7 +32,6 @@
 
 ## 1. Introduction
 Provide a short description of the purpose of this assignment, the Sobel edge detection algorithm in the given code, and the goal of applying OpenMPI parallelization.
-
 
 
 ## 2. Theory: Parallelizable Operations
