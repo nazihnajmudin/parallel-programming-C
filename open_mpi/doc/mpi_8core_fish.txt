@@ -1,0 +1,26 @@
+Gambar berhasil dimuat: 2318x3086
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 289
+Proses 1: baris 290 - 579
+Proses 2: baris 580 - 869
+Proses 3: baris 870 - 1159
+Proses 4: baris 1160 - 1449
+Proses 5: baris 1450 - 1739
+Proses 6: baris 1740 - 2028
+Proses 7: baris 2029 - 2317
+Hasil berhasil disimpan ke mpi_8core_fish.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/fish.jpg
+File Output: mpi_8core_fish.jpg
+Dimensi Gambar: 2318x3086
+Mode Operasi: 0
+Jumlah Proses MPI: 8
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.55693 detik
+Processing Time: 0.158629 detik
+Output Time: 0.761479 detik
+Total Time: 1.47704 detik
+========================

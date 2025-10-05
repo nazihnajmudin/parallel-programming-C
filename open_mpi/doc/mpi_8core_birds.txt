@@ -1,0 +1,26 @@
+Gambar berhasil dimuat: 200x356
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 24
+Proses 1: baris 25 - 49
+Proses 2: baris 50 - 74
+Proses 3: baris 75 - 99
+Proses 4: baris 100 - 124
+Proses 5: baris 125 - 149
+Proses 6: baris 150 - 174
+Proses 7: baris 175 - 199
+Hasil berhasil disimpan ke mpi_8core_birds.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/birds.jpg
+File Output: mpi_8core_birds.jpg
+Dimensi Gambar: 200x356
+Mode Operasi: 0
+Jumlah Proses MPI: 8
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.0427373 detik
+Processing Time: 0.00204861 detik
+Output Time: 0.0214699 detik
+Total Time: 0.0662558 detik
+========================

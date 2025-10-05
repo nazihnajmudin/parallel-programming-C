@@ -1,0 +1,22 @@
+Gambar berhasil dimuat: 628x1200
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 156
+Proses 1: baris 157 - 313
+Proses 2: baris 314 - 470
+Proses 3: baris 471 - 627
+Hasil berhasil disimpan ke mpi_4core_lion.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/lion.jpg
+File Output: mpi_4core_lion.jpg
+Dimensi Gambar: 628x1200
+Mode Operasi: 0
+Jumlah Proses MPI: 4
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.0409299 detik
+Processing Time: 0.030404 detik
+Output Time: 0.0921907 detik
+Total Time: 0.163525 detik
+========================

@@ -1,0 +1,20 @@
+Gambar berhasil dimuat: 2318x3086
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 1158
+Proses 1: baris 1159 - 2317
+Hasil berhasil disimpan ke mpi_2core_fish.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/fish.jpg
+File Output: mpi_2core_fish.jpg
+Dimensi Gambar: 2318x3086
+Mode Operasi: 0
+Jumlah Proses MPI: 2
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.441661 detik
+Processing Time: 0.430883 detik
+Output Time: 0.558692 detik
+Total Time: 1.43124 detik
+========================

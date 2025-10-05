@@ -1,0 +1,20 @@
+Gambar berhasil dimuat: 200x356
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 99
+Proses 1: baris 100 - 199
+Hasil berhasil disimpan ke mpi_2core_birds.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/birds.jpg
+File Output: mpi_2core_birds.jpg
+Dimensi Gambar: 200x356
+Mode Operasi: 0
+Jumlah Proses MPI: 2
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.0297111 detik
+Processing Time: 0.00614072 detik
+Output Time: 0.0192394 detik
+Total Time: 0.0550912 detik
+========================

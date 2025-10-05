@@ -1,0 +1,20 @@
+Gambar berhasil dimuat: 1050x1680
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 524
+Proses 1: baris 525 - 1049
+Hasil berhasil disimpan ke mpi_2core_view.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/view.jpg
+File Output: mpi_2core_view.jpg
+Dimensi Gambar: 1050x1680
+Mode Operasi: 0
+Jumlah Proses MPI: 2
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.140529 detik
+Processing Time: 0.0828359 detik
+Output Time: 0.198702 detik
+Total Time: 0.422067 detik
+========================

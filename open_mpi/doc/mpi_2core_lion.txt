@@ -1,0 +1,20 @@
+Gambar berhasil dimuat: 628x1200
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 313
+Proses 1: baris 314 - 627
+Hasil berhasil disimpan ke mpi_2core_lion.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/lion.jpg
+File Output: mpi_2core_lion.jpg
+Dimensi Gambar: 628x1200
+Mode Operasi: 0
+Jumlah Proses MPI: 2
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.0388019 detik
+Processing Time: 0.0612246 detik
+Output Time: 0.0709096 detik
+Total Time: 0.170936 detik
+========================

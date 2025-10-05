@@ -1,0 +1,26 @@
+Gambar berhasil dimuat: 628x1200
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 78
+Proses 1: baris 79 - 157
+Proses 2: baris 158 - 236
+Proses 3: baris 237 - 315
+Proses 4: baris 316 - 393
+Proses 5: baris 394 - 471
+Proses 6: baris 472 - 549
+Proses 7: baris 550 - 627
+Hasil berhasil disimpan ke mpi_8core_lion.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/lion.jpg
+File Output: mpi_8core_lion.jpg
+Dimensi Gambar: 628x1200
+Mode Operasi: 0
+Jumlah Proses MPI: 8
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.0397377 detik
+Processing Time: 0.015434 detik
+Output Time: 0.0855993 detik
+Total Time: 0.140771 detik
+========================

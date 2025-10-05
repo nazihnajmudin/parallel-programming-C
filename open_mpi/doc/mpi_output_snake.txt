@@ -1,0 +1,22 @@
+Gambar berhasil dimuat: 750x1000
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 187
+Proses 1: baris 188 - 375
+Proses 2: baris 376 - 562
+Proses 3: baris 563 - 749
+Hasil berhasil disimpan ke mpi_output_snake.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/snake.jpg
+File Output: mpi_output_snake.jpg
+Dimensi Gambar: 750x1000
+Mode Operasi: 0
+Jumlah Proses MPI: 4
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.10627 detik
+Processing Time: 0.0203946 detik
+Output Time: 0.153432 detik
+Total Time: 0.280096 detik
+========================

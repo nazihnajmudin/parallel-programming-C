@@ -1,0 +1,26 @@
+Gambar berhasil dimuat: 1050x1680
+Mode operasi: 0
+Pembagian kerja:
+Proses 0: baris 0 - 131
+Proses 1: baris 132 - 263
+Proses 2: baris 264 - 394
+Proses 3: baris 395 - 525
+Proses 4: baris 526 - 656
+Proses 5: baris 657 - 787
+Proses 6: baris 788 - 918
+Proses 7: baris 919 - 1049
+Hasil berhasil disimpan ke mpi_8core_view.jpg
+
+=== LAPORAN RINGKASAN ===
+File Input: ../test_cases/view.jpg
+File Output: mpi_8core_view.jpg
+Dimensi Gambar: 1050x1680
+Mode Operasi: 0
+Jumlah Proses MPI: 8
+
+=== WAKTU EKSEKUSI ===
+Input Time: 0.23001 detik
+Processing Time: 0.0399299 detik
+Output Time: 0.276631 detik
+Total Time: 0.54657 detik
+========================
