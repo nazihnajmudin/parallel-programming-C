@@ -112,11 +112,11 @@ Versi paralel berhasil menghasilkan output gambar yang identik dengan versi seri
 
 | Gambar Input | Output Serial | Output Paralel |
 |-------------|---------------|----------------|
-| ![birds](../test_cases/birds.jpg) | ![serial_birds](../serial/pic/serial_output_birds.jpg) | ![parallel_birds](pic/mpi_4core_birds.jpg) |
-| ![fish](../test_cases/fish.jpg) | ![serial_fish](../serial/pic/serial_output_fish.jpg) | ![parallel_fish](pic/mpi_4core_fish.jpg) |
-| ![lion](../test_cases/lion.jpg) | ![serial_lion](../serial/pic/serial_output_lion.jpg) | ![parallel_lion](pic/mpi_4core_lion.jpg) |
-| ![snake](../test_cases/snake.jpg) | ![serial_snake](../serial/pic/serial_output_snake.jpg) | ![parallel_snake](pic/mpi_4core_snake.jpg) |
-| ![view](../test_cases/view.jpg) | ![serial_view](../serial/pic/serial_output_view.jpg) | ![parallel_view](pic/mpi_4core_view.jpg) |
+| ![birds](../test_cases/birds.jpg) | ![serial_birds](https://github.com/labsister22/tugas-kecil-if3130-sistem-paralel-dan-terdistribusi-barracuda/blob/final_openmpi/serial/pic/serial_output_birds.jpg) | ![parallel_birds](pic/mpi_4core_birds.jpg) |
+| ![fish](../test_cases/fish.jpg) | ![serial_fish](https://github.com/labsister22/tugas-kecil-if3130-sistem-paralel-dan-terdistribusi-barracuda/blob/final_openmpi/serial/pic/serial_output_fish.jpg) | ![parallel_fish](pic/mpi_4core_fish.jpg) |
+| ![lion](../test_cases/lion.jpg) | ![serial_lion](https://github.com/labsister22/tugas-kecil-if3130-sistem-paralel-dan-terdistribusi-barracuda/blob/final_openmpi/serial/pic/serial_output_lion.jpg) | ![parallel_lion](pic/mpi_4core_lion.jpg) |
+| ![snake](../test_cases/snake.jpg) | ![serial_snake](https://github.com/labsister22/tugas-kecil-if3130-sistem-paralel-dan-terdistribusi-barracuda/blob/final_openmpi/serial/pic/serial_output_snake.jpg) | ![parallel_snake](pic/mpi_4core_snake.jpg) |
+| ![view](../test_cases/view.jpg) | ![serial_view](https://github.com/labsister22/tugas-kecil-if3130-sistem-paralel-dan-terdistribusi-barracuda/blob/final_openmpi/serial/pic/serial_output_view.jpg) | ![parallel_view](pic/mpi_4core_view.jpg) |
 
 ### 4.2 Perbandingan Performa
 
