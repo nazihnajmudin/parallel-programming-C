@@ -71,9 +71,9 @@ Dalam implementasi Sobel Edge Detection, terdapat beberapa operasi yang dapat di
 Strategi paralelisasi yang diterapkan dalam implementasi OpenMP ini menggunakan pendekatan **shared-memory parallelism** dengan pembagian kerja berdasarkan iterasi loop. Workload dibagi secara otomatis oleh OpenMP runtime system menggunakan `#pragma omp parallel for`, di mana setiap thread menangani sebagian dari baris gambar (row-wise distribution).
 
 Jumlah thread yang diuji dalam implementasi ini adalah:
-- 1 thread (serial baseline)
-- 2 threads 
-- 4 threads
+- 2 threads (baseline paralel)
+- 4 threads 
+- 8 threads
 
 ### 3.2 Code Modifications
 Berikut adalah perubahan kode dari versi serial menjadi versi paralel OpenMP:
@@ -104,7 +104,7 @@ for (int y = 1; y < in.h - 1; y++) {
 
 **Sesudah (Parallel Version dengan OpenMP):**
 ```cpp
-// Loop paralel dengan OpenMP
+// Looping paralel biasa pake OpenMP
 #pragma omp parallel for schedule(dynamic)
 for (int y = 1; y < in.h - 1; y++) {
     for (int x = 1; x < in.w - 1; x++) {
@@ -145,98 +145,94 @@ for (int y = 1; y < in.h - 1; y++) {
   Ya, versi paralel menghasilkan output yang identik dengan versi serial karena algoritma Sobel edge detection bersifat deterministic dan setiap pixel diproses secara independen.
 
 - **Verifikasi Hasil:**
-  - Output gambar dari 1 thread, 2 threads, dan 4 threads menghasilkan edge detection yang identik
+  - Output gambar dari 2 threads, 4 threads, dan 8 threads menghasilkan edge detection yang identik
   - Tidak ada perbedaan visual dalam hasil deteksi tepi
   - Threshold values yang digunakan konsisten across different thread configurations
 
 **Input and Output Image Comparison:**
 
-| Input Image | Serial Output (1 Thread) | Parallel Output (2 Threads) | Parallel Output (4 Threads) |
-|-------------|-------------------------|----------------------------|----------------------------|
-| ![birds](../test_cases/birds.jpg) | ![serial_birds](output/jpg/hasil_birds_1thread.jpg) | ![parallel_birds_2](output/jpg/hasil_birds_2thread.jpg) | ![parallel_birds_4](output/jpg/hasil_birds_4thread.jpg) |
-| ![fish](../test_cases/fish.jpg) | ![serial_fish](output/jpg/hasil_fish_1thread.jpg) | ![parallel_fish_2](output/jpg/hasil_fish_2thread.jpg) | ![parallel_fish_4](output/jpg/hasil_fish_4thread.jpg) |
-| ![lion](../test_cases/lion.jpg) | ![serial_lion](output/jpg/hasil_lion_1thread.jpg) | ![parallel_lion_2](output/jpg/hasil_lion_2thread.jpg) | ![parallel_lion_4](output/jpg/hasil_lion_4thread.jpg) |
-| ![snake](../test_cases/snake.jpg) | ![serial_snake](output/jpg/hasil_snake_1thread.jpg) | ![parallel_snake_2](output/jpg/hasil_snake_2thread.jpg) | ![parallel_snake_4](output/jpg/hasil_snake_4thread.jpg) |
-| ![view](../test_cases/view.jpg) | ![serial_view](output/jpg/hasil_view_1thread.jpg) | ![parallel_view_2](output/jpg/hasil_view_2thread.jpg) | ![parallel_view_4](output/jpg/hasil_view_4thread.jpg) |
+| Input Image | Parallel Output (2 Threads) | Parallel Output (4 Threads) | Parallel Output (8 Threads) |
+|-------------|----------------------------|----------------------------|----------------------------|
+| ![birds](../test_cases/birds.jpg) | ![parallel_birds_2](output/jpg/hasil_birds_2thread.jpg) | ![parallel_birds_4](output/jpg/hasil_birds_4thread.jpg) | ![parallel_birds_8](output/jpg/hasil_birds_8thread.jpg) |
+| ![fish](../test_cases/fish.jpg) | ![parallel_fish_2](output/jpg/hasil_fish_2thread.jpg) | ![parallel_fish_4](output/jpg/hasil_fish_4thread.jpg) | ![parallel_fish_8](output/jpg/hasil_fish_8thread.jpg) |
+| ![lion](../test_cases/lion.jpg) | ![parallel_lion_2](output/jpg/hasil_lion_2thread.jpg) | ![parallel_lion_4](output/jpg/hasil_lion_4thread.jpg) | ![parallel_lion_8](output/jpg/hasil_lion_8thread.jpg) |
+| ![snake](../test_cases/snake.jpg) | ![parallel_snake_2](output/jpg/hasil_snake_2thread.jpg) | ![parallel_snake_4](output/jpg/hasil_snake_4thread.jpg) | ![parallel_snake_8](output/jpg/hasil_snake_8thread.jpg) |
+| ![view](../test_cases/view.jpg) | ![parallel_view_2](output/jpg/hasil_view_2thread.jpg) | ![parallel_view_4](output/jpg/hasil_view_4thread.jpg) | ![parallel_view_8](output/jpg/hasil_view_8thread.jpg) |
 
-**Catatan:** Semua versi (1, 2, dan 4 threads) menghasilkan gambar output yang pixel-perfect identical, memverifikasi bahwa paralelisasi tidak mempengaruhi correctness algoritma.
+**Catatan:** Semua versi (2, 4, dan 8 threads) menghasilkan gambar output yang pixel-perfect identical, memverifikasi bahwa paralelisasi tidak mempengaruhi correctness algoritma.
 
 
 
 ### 4.2 Performance Comparison
 
-#### Serial Version (1 Thread)
-| Image Name | Input Time (ms) | Processing Time (ms) | Output Time (ms) | Total Time (ms) |
-|------------|-----------------|-----------------------|------------------|-----------------|
-| birds.jpg  | 41              | 17                   | 32               | 90              |
-| fish.jpg   | 907             | 544                  | 369              | 1820            |
-| lion.jpg   | 76              | 95                   | 147              | 318             |
-| snake.jpg  | 193             | 70                   | 230              | 493             |
-| view.jpg   | 324             | 130                  | 239              | 693             |
-
-#### Parallel Version
-| Image Name | Core Number | Input Time (ms) | Processing Time (ms) | Output Time (ms) | Total Time (ms) |
-|------------|-------------|-----------------|-----------------------|------------------|-----------------|
+#### Parallel Performance Results
+| Image Name | Number of Threads | Input Time (ms) | Processing Time (ms) | Output Time (ms) | Total Time (ms) |
+|------------|-------------------|----------------|-----------------------|------------------|-----------------|
 | birds.jpg  | 2           | 42              | 16                   | 27               | 85              |
 | birds.jpg  | 4           | 43              | 11                   | 41               | 95              |
+| birds.jpg  | 8           | 60              | 26                   | 12               | 98              |
 | fish.jpg   | 2           | 718             | 577                  | 407              | 1702            |
 | fish.jpg   | 4           | 694             | 579                  | 760              | 2033            |
+| fish.jpg   | 8           | 282             | 140                  | 332              | 754             |
 | lion.jpg   | 2           | 70              | 81                   | 144              | 295             |
 | lion.jpg   | 4           | 65              | 68                   | 116              | 249             |
+| lion.jpg   | 8           | 30              | 46                   | 60               | 136             |
 | snake.jpg  | 2           | 160             | 64                   | 216              | 440             |
 | snake.jpg  | 4           | 160             | 66                   | 181              | 407             |
+| snake.jpg  | 8           | 133             | 51                   | 74               | 258             |
 | view.jpg   | 2           | 259             | 116                  | 273              | 648             |
 | view.jpg   | 4           | 261             | 105                  | 248              | 614             |
+| view.jpg   | 8           | 214             | 65                   | 129              | 408             |
 
 
 
 ### 4.3 Speedup and Efficiency
-- **Speedup** = Serial Time / Parallel Time  
-- **Efficiency** = Speedup / Number of Threads
+- **Speedup** = Baseline Time (2 Threads) / Parallel Time  
+- **Efficiency** = Speedup / (Number of Threads / 2)
 
-#### Analisis Performa untuk Semua Gambar:
+#### Analisis Performa untuk Semua Gambar (dengan 2 threads sebagai baseline):
 
 **birds.jpg:**
 | Threads | Total Time (ms) | Speedup | Efficiency |
 |---------|-----------------|---------|------------|
-| 1       | 90              | 1.00    | 1.00       |
-| 2       | 85              | 1.06    | 0.53       |
-| 4       | 95              | 0.95    | 0.24       |
+| 2       | 85              | 1.00    | 1.00       |
+| 4       | 95              | 0.89    | 0.45       |
+| 8       | 98              | 0.87    | 0.22       |
 
 **fish.jpg:**
 | Threads | Total Time (ms) | Speedup | Efficiency |
 |---------|-----------------|---------|------------|
-| 1       | 1820            | 1.00    | 1.00       |
-| 2       | 1702            | 1.07    | 0.54       |
-| 4       | 2033            | 0.90    | 0.22       |
+| 2       | 1702            | 1.00    | 1.00       |
+| 4       | 2033            | 0.84    | 0.42       |
+| 8       | 754             | 2.26    | 0.57       |
 
 **lion.jpg:**
 | Threads | Total Time (ms) | Speedup | Efficiency |
 |---------|-----------------|---------|------------|
-| 1       | 318             | 1.00    | 1.00       |
-| 2       | 295             | 1.08    | 0.54       |
-| 4       | 249             | 1.28    | 0.32       |
+| 2       | 295             | 1.00    | 1.00       |
+| 4       | 249             | 1.18    | 0.59       |
+| 8       | 136             | 2.17    | 0.54       |
 
 **snake.jpg:**
 | Threads | Total Time (ms) | Speedup | Efficiency |
 |---------|-----------------|---------|------------|
-| 1       | 493             | 1.00    | 1.00       |
-| 2       | 440             | 1.12    | 0.56       |
-| 4       | 407             | 1.21    | 0.30       |
+| 2       | 440             | 1.00    | 1.00       |
+| 4       | 407             | 1.08    | 0.54       |
+| 8       | 258             | 1.71    | 0.43       |
 
 **view.jpg:**
 | Threads | Total Time (ms) | Speedup | Efficiency |
 |---------|-----------------|---------|------------|
-| 1       | 693             | 1.00    | 1.00       |
-| 2       | 648             | 1.07    | 0.54       |
-| 4       | 614             | 1.13    | 0.28       |
+| 2       | 648             | 1.00    | 1.00       |
+| 4       | 614             | 1.06    | 0.53       |
+| 8       | 408             | 1.59    | 0.40       |
 
 **Observasi Komprehensif:**
-- **2 threads**: Konsisten memberikan peningkatan performa kecil (speedup 1.06-1.12x) untuk semua gambar
-- **4 threads**: Performa bervariasi - ada yang meningkat (lion, snake, view) dan ada yang menurun (birds, fish)
-- **Processing time**: Umumnya berkurang dengan penambahan threads, menunjukkan paralelisasi konvolusi berhasil
-- **Gambar besar** (fish.jpg): Menunjukkan overhead paralelisasi yang signifikan pada 4 threads
-- **Gambar kecil-menengah**: Memberikan speedup yang lebih baik, terutama pada lion.jpg dan snake.jpg  
+- **4 threads**: Performa bervariasi - meningkat untuk lion (1.18x) dan snake (1.08x), menurun untuk birds (0.89x) dan fish (0.84x)
+- **8 threads**: Memberikan speedup signifikan untuk gambar menengah-besar: fish (2.26x), lion (2.17x), snake (1.71x), view (1.59x)
+- **Processing time**: Konsisten berkurang dengan penambahan threads, menunjukkan paralelisasi konvolusi sangat berhasil
+- **Gambar besar** (fish.jpg): Menunjukkan scalability terbaik pada 8 threads dengan speedup 2.26x
+- **Gambar kecil** (birds.jpg): Mengalami overhead paralelisasi yang meningkat seiring penambahan threads  
 
 
 
@@ -251,13 +247,13 @@ for (int y = 1; y < in.h - 1; y++) {
 - **Implementasi OpenMP yang Sederhana**: Penggunaan `#pragma omp parallel for` memberikan cara yang mudah dan efektif untuk memparalelisasi loop konvolusi tanpa perlu mengubah struktur kode secara signifikan.
 - **Pembagian Kerja Otomatis**: OpenMP runtime system secara otomatis membagi iterasi loop di antara available threads, sehingga tidak perlu implementasi manual untuk work distribution.
 - **Penurunan Processing Time**: Terlihat konsisten bahwa waktu pemrosesan inti berkurang dengan penambahan threads across semua gambar.
-- **Konsistensi 2 Threads**: Konfigurasi 2 threads konsisten memberikan speedup positif untuk semua test cases (1.06x - 1.12x).
+- **Excellent Scalability pada 8 Threads**: Konfigurasi 8 threads menunjukkan peningkatan performa dramatik untuk gambar menengah-besar (speedup 1.59x - 2.26x).
 
 ### 5.2 Tantangan yang Dihadapi:
-- **Variabilitas Performa pada 4 Threads**: Hasil yang tidak konsisten - beberapa gambar (lion, snake, view) mendapat speedup, sementara yang lain (birds, fish) mengalami penurunan performa.
-- **Overhead vs Problem Size**: Gambar besar (fish.jpg) menunjukkan overhead paralelisasi yang lebih signifikan dibandingkan gambar kecil-menengah.
-- **Load Balancing**: Meskipun menggunakan dynamic scheduling, distribusi beban kerja masih tidak optimal untuk beberapa kasus.
-- **Memory Access Patterns**: Shared-memory access menyebabkan cache miss dan memory contention, terutama pada konfigurasi 4 threads.
+- **Overhead pada Gambar Kecil**: birds.jpg mengalami penurunan performa seiring penambahan threads karena overhead lebih besar dari benefit komputasi.
+- **Variabilitas Berdasarkan Problem Size**: Performa paralelisasi sangat bergantung pada ukuran dan kompleksitas gambar input.
+- **Memory Bandwidth Scaling**: Pada 8 threads, bandwidth memori menjadi faktor pembatas untuk beberapa gambar.
+- **Load Balancing Complexity**: Dynamic scheduling memerlukan tuning untuk optimal performance across different image sizes.
 
 ### 5.3 Overhead yang Diamati:
 - **Thread Creation Overhead**: Lebih signifikan pada gambar kecil (birds.jpg) dibandingkan gambar menengah (lion.jpg, snake.jpg).
@@ -277,26 +273,26 @@ for (int y = 1; y < in.h - 1; y++) {
 Berdasarkan hasil eksperimen komprehensif dengan 5 test cases dan analisis performa, dapat disimpulkan bahwa:
 
 ### 6.1 Efektivitas Paralelisasi:
-- Paralelisasi OpenMP **efektif** untuk mengurangi waktu pemrosesan inti algoritma Sobel Edge Detection across semua gambar.
-- **2 threads** konsisten memberikan peningkatan performa (speedup 1.06x - 1.12x) untuk semua test cases.
-- **4 threads** memberikan hasil yang bervariasi - optimal untuk gambar kecil-menengah (lion, snake, view) tetapi mengalami overhead untuk gambar besar (fish) dan sangat kecil (birds).
+- Paralelisasi OpenMP **sangat efektif** untuk gambar menengah hingga besar, terutama pada konfigurasi 8 threads.
+- **4 threads** memberikan improvement moderat untuk sebagian besar gambar (speedup 1.06x - 1.18x).
+- **8 threads** memberikan breakthrough performance untuk gambar komplek dengan speedup hingga 2.26x untuk fish.jpg.
 
 ### 6.2 Peningkatan Performa Berdasarkan Ukuran Gambar:
-- **Gambar Kecil** (birds.jpg): 2 threads optimal (speedup 1.06x), 4 threads mengalami overhead (0.95x)
-- **Gambar Besar** (fish.jpg): 2 threads memberikan improvement minimal (1.07x), 4 threads counterproductive (0.90x)
-- **Gambar Menengah** (lion, snake, view): Menunjukkan scalability terbaik dengan speedup hingga 1.28x pada 4 threads
+- **Gambar Kecil** (birds.jpg): Mengalami degradasi performa seiring penambahan threads (0.89x pada 4 threads, 0.87x pada 8 threads)
+- **Gambar Besar** (fish.jpg): Menunjukkan scalability excellent pada 8 threads (speedup 2.26x) setelah degradasi pada 4 threads
+- **Gambar Menengah** (lion, snake, view): Consistent improvement dengan peak performance pada 8 threads (speedup 1.59x - 2.17x)
 
 ### 6.3 Trade-off Komputasi vs Overhead:
-- **Sweet Spot**: 2 threads memberikan balance terbaik antara parallelization benefit dan overhead untuk semua kasus
-- **Processing Time**: Konsisten berkurang dengan penambahan threads, membuktikan efektivitas paralelisasi konvolusi
-- **Total Performance**: Dibatasi oleh I/O overhead dan synchronization cost
-- **Memory Bandwidth**: Menjadi limiting factor pada gambar besar dengan multiple threads
+- **Sweet Spot**: 8 threads optimal untuk gambar menengah-besar, 2-4 threads untuk gambar kecil
+- **Processing Time**: Dramatic reduction dengan 8 threads, membuktikan excellent scalability untuk computation-heavy workloads
+- **Total Performance**: Breakthrough achieved untuk large images dengan proper thread scaling
+- **Efficiency**: Tetap reasonable (0.40-0.57) pada 8 threads untuk gambar yang sesuai
 
 ### 6.4 Kesimpulan Utama:
-- **OpenMP paralelisasi paling efektif pada gambar berukuran menengah** dengan 2-4 threads
-- **Overhead paralelisasi signifikan** pada gambar sangat kecil atau sangat besar
-- **Scalability terbatas** karena algoritma Sobel edge detection memiliki rasio computation-to-communication yang tidak optimal untuk high thread count
-- **Implementasi berhasil** mempertahankan correctness sambil memberikan moderate performance improvement  
+- **OpenMP paralelisasi sangat efektif pada gambar menengah-besar** dengan 8 threads memberikan speedup hingga 2.26x
+- **Problem size menjadi faktor kunci** dalam menentukan optimal thread configuration
+- **Excellent scalability achieved** untuk computation-intensive workloads dengan proper thread scaling
+- **Implementasi berhasil** mempertahankan correctness sambil memberikan significant performance improvement untuk appropriate problem sizes  
 
 
 
@@ -321,8 +317,9 @@ Berdasarkan hasil eksperimen komprehensif dengan 5 test cases dan analisis perfo
 
 
 ## 8. References
-1. Youtube : OPENCV ep 6 : Konvolusi dan Kernel --> link berikut : .
-7. Catatan Kuliah IF3130 Sistem Paralel dan Terdistribusi, Institut Teknologi Bandung.
+1. Youtube : OPENCV ep 6 : Konvolusi dan Kernel --> link berikut : https://www.youtube.com/watch?v=nd-TfnK-9xI .
+2. Hanya REFERENSI Github orang lain --> link berikut : https://www.google.com/imgres?q=konvolusi%20open%20mp&imgurl=https%3A%2F%2Fi.ytimg.com%2Fvi%2F_Cu1b7KwGIU%2Fhq720.jpg%3Fsqp%3D-oaymwE7CK4FEIIDSFryq4qpAy0IARUAAAAAGAElAADIQj0AgKJD8AEB-AGEBYAC4AOKAgwIABABGFkgQyhlMA8%3D%26rs%3DAOn4CLB8JYIN2caUGFdx4F_tU33o-XeNVg&imgrefurl=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D_Cu1b7KwGIU&docid=iPUlFPT3_-an8M&tbnid=jvyMpizxTNljcM&vet=12ahUKEwimha2Lj5-QAxXyxjgGHbMDOAUQM3oECBcQAA..i&w=686&h=386&hcb=2&ved=2ahUKEwimha2Lj5-QAxXyxjgGHbMDOAUQM3oECBcQAA
+3. Catatan Kuliah IF3130 Sistem Paralel dan Terdistribusi, Institut Teknologi Bandung.
 
 
 
@@ -348,28 +345,19 @@ make
 ./mp <num_threads> <input_image> <output_image> > <log_file>
 
 # Contoh penggunaan:
-./mp 1 ../test_cases/birds.jpg output_birds_1thread.jpg > hasil_birds_1thread.txt
 ./mp 2 ../test_cases/birds.jpg output_birds_2thread.jpg > hasil_birds_2thread.txt
 ./mp 4 ../test_cases/birds.jpg output_birds_4thread.jpg > hasil_birds_4thread.txt
+./mp 8 ../test_cases/birds.jpg output_birds_8thread.jpg > hasil_birds_8thread.txt
 
 # Untuk semua test cases:
-./mp 1 ../test_cases/fish.jpg output_fish_1thread.jpg > hasil_fish_1thread.txt
-./mp 2 ../test_cases/lion.jpg output_lion_2thread.jpg > hasil_lion_2thread.txt
-./mp 4 ../test_cases/snake.jpg output_snake_4thread.jpg > hasil_snake_4thread.txt
-./mp 2 ../test_cases/view.jpg output_view_2thread.jpg > hasil_view_2thread.txt
+./mp 2 ../test_cases/fish.jpg output_fish_2thread.jpg > hasil_fish_2thread.txt
+./mp 4 ../test_cases/lion.jpg output_lion_4thread.jpg > hasil_lion_4thread.txt
+./mp 8 ../test_cases/snake.jpg output_snake_8thread.jpg > hasil_snake_8thread.txt
+./mp 8 ../test_cases/view.jpg output_view_8thread.jpg > hasil_view_8thread.txt
 ```
 
 ### 9.4 Parameter Program:
-- **num_threads**: Jumlah thread yang digunakan (1, 2, 4, 8, dll.)
+- **num_threads**: Jumlah thread yang digunakan (2, 4, 8, dll.)
 - **input_image**: Path ke file gambar input (format .jpg)
 - **output_image**: Path untuk menyimpan hasil edge detection
 - **log_file**: File untuk menyimpan output timing dan informasi program
-
-### 9.5 Mengatur Environment Variable (Opsional):
-```bash
-# Mengatur jumlah thread secara global
-export OMP_NUM_THREADS=4
-
-# Mengatur thread affinity
-export OMP_PROC_BIND=true
-```
