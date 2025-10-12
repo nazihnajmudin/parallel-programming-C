@@ -184,55 +184,78 @@ for (int y = 1; y < in.h - 1; y++) {
 | view.jpg   | 4           | 261             | 105                  | 248              | 614             |
 | view.jpg   | 8           | 214             | 65                   | 129              | 408             |
 
+#### Serial Performance Results (Baseline for Comparison)
+| Image Name | Input Time (ms) | Processing Time (ms) | Output Time (ms) | Total Time (ms) |
+|------------|-----------------|---------------------|------------------|-----------------|
+| birds.jpg  | 32              | 19                  | 17               | 68              |
+| fish.jpg   | 651             | 2174                | 335              | 3160            |
+| lion.jpg   | 53              | 253                 | 94               | 400             |
+| snake.jpg  | 112             | 236                 | 195              | 543             |
+| view.jpg   | 226             | 539                 | 199              | 964             |
 
+**Serial vs Parallel Comparison Table:**
+
+| Input Image | Serial Output | Parallel Output (2 Threads) | Parallel Output (4 Threads) | Parallel Output (8 Threads) |
+|-------------|---------------|----------------------------|----------------------------|----------------------------|
+| ![birds](../test_cases/birds.jpg) | ![serial_birds](../serial/pic/serial_output_birds.jpg) | ![parallel_birds_2](output/jpg/hasil_birds_2thread.jpg) | ![parallel_birds_4](output/jpg/hasil_birds_4thread.jpg) | ![parallel_birds_8](output/jpg/hasil_birds_8thread.jpg) |
+| ![fish](../test_cases/fish.jpg) | ![serial_fish](../serial/pic/serial_output_fish.jpg) | ![parallel_fish_2](output/jpg/hasil_fish_2thread.jpg) | ![parallel_fish_4](output/jpg/hasil_fish_4thread.jpg) | ![parallel_fish_8](output/jpg/hasil_fish_8thread.jpg) |
+| ![lion](../test_cases/lion.jpg) | ![serial_lion](../serial/pic/serial_output_lion.jpg) | ![parallel_lion_2](output/jpg/hasil_lion_2thread.jpg) | ![parallel_lion_4](output/jpg/hasil_lion_4thread.jpg) | ![parallel_lion_8](output/jpg/hasil_lion_8thread.jpg) |
+| ![snake](../test_cases/snake.jpg) | ![serial_snake](../serial/pic/serial_output_snake.jpg) | ![parallel_snake_2](output/jpg/hasil_snake_2thread.jpg) | ![parallel_snake_4](output/jpg/hasil_snake_4thread.jpg) | ![parallel_snake_8](output/jpg/hasil_snake_8thread.jpg) |
+| ![view](../test_cases/view.jpg) | ![serial_view](../serial/pic/serial_output_view.jpg) | ![parallel_view_2](output/jpg/hasil_view_2thread.jpg) | ![parallel_view_4](output/jpg/hasil_view_4thread.jpg) | ![parallel_view_8](output/jpg/hasil_view_8thread.jpg) |
 
 ### 4.3 Speedup and Efficiency
-- **Speedup** = Baseline Time (2 Threads) / Parallel Time  
-- **Efficiency** = Speedup / (Number of Threads / 2)
+- **Speedup** = Serial Time / Parallel Time  
+- **Efficiency** = Speedup / Number of Threads
 
-#### Analisis Performa untuk Semua Gambar (dengan 2 threads sebagai baseline):
+#### Analisis Performa untuk Semua Gambar (dengan Serial sebagai baseline):
 
 **birds.jpg:**
-| Threads | Total Time (ms) | Speedup | Efficiency |
-|---------|-----------------|---------|------------|
-| 2       | 85              | 1.00    | 1.00       |
-| 4       | 95              | 0.89    | 0.45       |
-| 8       | 98              | 0.87    | 0.22       |
+| Threads | Total Time (ms) | Speedup vs Serial | Efficiency |
+|---------|-----------------|-------------------|------------|
+| Serial  | 68              | 1.00              | 1.00       |
+| 2       | 85              | 0.80              | 0.40       |
+| 4       | 95              | 0.72              | 0.18       |
+| 8       | 98              | 0.69              | 0.09       |
 
 **fish.jpg:**
-| Threads | Total Time (ms) | Speedup | Efficiency |
-|---------|-----------------|---------|------------|
-| 2       | 1702            | 1.00    | 1.00       |
-| 4       | 2033            | 0.84    | 0.42       |
-| 8       | 754             | 2.26    | 0.57       |
+| Threads | Total Time (ms) | Speedup vs Serial | Efficiency |
+|---------|-----------------|-------------------|------------|
+| Serial  | 3160            | 1.00              | 1.00       |
+| 2       | 1702            | 1.86              | 0.93       |
+| 4       | 2033            | 1.55              | 0.39       |
+| 8       | 754             | 4.19              | 0.52       |
 
 **lion.jpg:**
-| Threads | Total Time (ms) | Speedup | Efficiency |
-|---------|-----------------|---------|------------|
-| 2       | 295             | 1.00    | 1.00       |
-| 4       | 249             | 1.18    | 0.59       |
-| 8       | 136             | 2.17    | 0.54       |
+| Threads | Total Time (ms) | Speedup vs Serial | Efficiency |
+|---------|-----------------|-------------------|------------|
+| Serial  | 400             | 1.00              | 1.00       |
+| 2       | 295             | 1.36              | 0.68       |
+| 4       | 249             | 1.61              | 0.40       |
+| 8       | 136             | 2.94              | 0.37       |
 
 **snake.jpg:**
-| Threads | Total Time (ms) | Speedup | Efficiency |
-|---------|-----------------|---------|------------|
-| 2       | 440             | 1.00    | 1.00       |
-| 4       | 407             | 1.08    | 0.54       |
-| 8       | 258             | 1.71    | 0.43       |
+| Threads | Total Time (ms) | Speedup vs Serial | Efficiency |
+|---------|-----------------|-------------------|------------|
+| Serial  | 543             | 1.00              | 1.00       |
+| 2       | 440             | 1.23              | 0.62       |
+| 4       | 407             | 1.33              | 0.33       |
+| 8       | 258             | 2.10              | 0.26       |
 
 **view.jpg:**
-| Threads | Total Time (ms) | Speedup | Efficiency |
-|---------|-----------------|---------|------------|
-| 2       | 648             | 1.00    | 1.00       |
-| 4       | 614             | 1.06    | 0.53       |
-| 8       | 408             | 1.59    | 0.40       |
+| Threads | Total Time (ms) | Speedup vs Serial | Efficiency |
+|---------|-----------------|-------------------|------------|
+| Serial  | 964             | 1.00              | 1.00       |
+| 2       | 648             | 1.49              | 0.75       |
+| 4       | 614             | 1.57              | 0.39       |
+| 8       | 408             | 2.36              | 0.30       |
 
-**Observasi Komprehensif:**
-- **4 threads**: Performa bervariasi - meningkat untuk lion (1.18x) dan snake (1.08x), menurun untuk birds (0.89x) dan fish (0.84x)
-- **8 threads**: Memberikan speedup signifikan untuk gambar menengah-besar: fish (2.26x), lion (2.17x), snake (1.71x), view (1.59x)
-- **Processing time**: Konsisten berkurang dengan penambahan threads, menunjukkan paralelisasi konvolusi sangat berhasil
-- **Gambar besar** (fish.jpg): Menunjukkan scalability terbaik pada 8 threads dengan speedup 2.26x
-- **Gambar kecil** (birds.jpg): Mengalami overhead paralelisasi yang meningkat seiring penambahan threads  
+**Observasi Komprehensif (Speedup vs Serial):**
+- **2 threads**: Memberikan speedup positif untuk semua gambar kecuali birds.jpg (0.80x), dengan fish.jpg mencapai 1.86x
+- **4 threads**: Peningkatan moderat untuk gambar menengah-besar: lion (1.61x), snake (1.33x), view (1.57x)
+- **8 threads**: Excellent scalability untuk computation-heavy images: fish (4.19x), lion (2.94x), snake (2.10x), view (2.36x)
+- **Processing time reduction**: Dramatik pada 8 threads, dari 2174ms → 140ms untuk fish.jpg (15.5x speedup)
+- **Gambar kecil** (birds.jpg): Consistent overhead across all parallel configurations vs serial
+- **Gambar besar** (fish.jpg): Best candidate untuk paralelisasi dengan 4.19x speedup pada 8 threads  
 
 
 
