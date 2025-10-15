@@ -1,5 +1,5 @@
-#ifndef IMAGE_HPP
-#define IMAGE_HPP
+#ifndef IMAGE_H
+#define IMAGE_H
 
 /* IMAGE STRUCT */
 typedef struct image_t {

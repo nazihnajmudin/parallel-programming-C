@@ -1,6 +1,6 @@
 #include "header/image.h"
+#include "header/io.hpp"
 
-#include <string>
 #include <opencv2/opencv.hpp>
 
 image_t loadJPG(const std::string &f) {

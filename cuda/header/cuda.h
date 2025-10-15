@@ -1,5 +1,5 @@
-#ifndef CUDA_HPP
-#define CUDA_HPP
+#ifndef CUDA_H
+#define CUDA_H
 
 #include "image.h"
 #include <cuda_runtime.h>
