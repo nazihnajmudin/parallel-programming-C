@@ -38,46 +38,46 @@ __global__ void kernel_sobel(image_t *d_img, int *d_mode, int *d_thresholds) {
 }
 
 void sobel(image_t *h_img, int h_mode, int *h_arr_thresholds) {
-    // Prepare for Image
     image_t *d_img;
-    size_t size_p = h_img->w * h_img->h * sizeof(unsigned char);
-    d_img->w = h_img->w;
-    d_img->h = h_img->h;
-    d_img->p = (unsigned char*)malloc(size_p);
-
-    // Prepare other pointer
+    unsigned char *d_p;
     int *d_mode;
     int *d_arr_thresholds;
 
+    size_t size_p = h_img->w * h_img->h * sizeof(unsigned char);
+
     // GPU Memory Allocation
-    cudaMalloc((void**)&d_img, sizeof(image_t));
-    cudaMalloc((void**)&d_img->p, size_p);
-    cudaMalloc((void**)&d_mode, sizeof(int));
-    cudaMalloc((void**)&d_arr_thresholds, (*d_mode)*sizeof(int));
-    
-    // Copy to Device
-    cudaMemcpy(d_img, &h_img, sizeof(image_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_img->p, &h_img->p, size_p, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_mode, &h_mode, sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_arr_thresholds, &h_arr_thresholds, *d_mode, cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMalloc((void**)&d_img, sizeof(image_t)));
+    CUDA_CHECK(cudaMalloc((void**)&d_p, size_p));
+    CUDA_CHECK(cudaMalloc((void**)&d_mode, sizeof(int)));
+    CUDA_CHECK(cudaMalloc((void**)&d_arr_thresholds, h_mode * sizeof(int)));
+
+    // Copy image data
+    CUDA_CHECK(cudaMemcpy(d_p, h_img->p, size_p, cudaMemcpyHostToDevice));
+
+    // Prepare image_t struct on host
+    image_t temp_img = *h_img;
+    temp_img.p = d_p;
+
+    // Copy struct & other parameters
+    CUDA_CHECK(cudaMemcpy(d_img, &temp_img, sizeof(image_t), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_mode, &h_mode, sizeof(int), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_arr_thresholds, h_arr_thresholds, h_mode * sizeof(int), cudaMemcpyHostToDevice));
 
     // Find best config
     dim3 dim_grid, dim_block;
     getOptimalConfig(h_img->w, h_img->h, &dim_grid, &dim_block);
 
-    // Parallelize
+    // Kernel launch
     kernel_sobel<<<dim_grid, dim_block>>>(d_img, d_mode, d_arr_thresholds);
+    CUDA_CHECK(cudaGetLastError());         // Check launch errors
+    CUDA_CHECK(cudaDeviceSynchronize());    // Check execution errors
 
-    // Copy to Host
-    cudaMemcpy(h_img, d_img, sizeof(image_t), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_img->p, d_img->p, size_p, cudaMemcpyDeviceToHost);
+    // Copy back results
+    CUDA_CHECK(cudaMemcpy(h_img->p, d_p, size_p, cudaMemcpyDeviceToHost));
 
-    // GPU Memory Deallocation
-    cudaFree(d_arr_thresholds);
-    cudaFree(d_mode);
-    cudaFree(d_img->p);
-    cudaFree(d_img);
-
-    // CPU Memory Deallocation
-    free(d_img->p);
+    // Free device memory
+    CUDA_CHECK(cudaFree(d_arr_thresholds));
+    CUDA_CHECK(cudaFree(d_mode));
+    CUDA_CHECK(cudaFree(d_p));
+    CUDA_CHECK(cudaFree(d_img));
 }
