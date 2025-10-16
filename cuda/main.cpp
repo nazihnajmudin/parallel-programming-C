@@ -65,4 +65,6 @@ int main(int argc,char*argv[]){
     std::cout << "  Output     : " << tOutput << "\n";
     std::cout << "======================================================\n";
 
+    // Bebaskan Memori
+    DELETE(img);
 }
