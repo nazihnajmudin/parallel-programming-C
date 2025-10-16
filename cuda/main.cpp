@@ -37,10 +37,6 @@ int main(int argc,char*argv[]){
         }
     }
 
-    // svae/load CONTROL
-    image_t control_image = loadJPG(inputFile);
-    saveJPG(control_image, "control.jpg");
-
     auto t0 = std::chrono::high_resolution_clock::now();
     image_t img = loadJPG(inputFile);
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -72,5 +68,4 @@ int main(int argc,char*argv[]){
 
     // Bebaskan Memori
     DELETE(img);
-    DELETE(control_image);
 }
