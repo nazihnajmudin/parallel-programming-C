@@ -2,6 +2,7 @@
 #define CUDA_H
 
 #include "image.h"
+#include <cstdio>
 #include <cuda_runtime.h>
 
 #define CUDA_CHECK(call)                                                     \

@@ -54,18 +54,19 @@ void getOptimalConfig(int width, int height, dim3 *dim_grid, dim3 *dim_block) {
     // Menginisialisasi struct dim3 secara manual di C
     dim_block->x = dim_block_X;
     dim_block->y = dim_block_Y;
-    dim_block->z = 1;
+    // dim_block->z = 1;
 
     // Tentukan dim_grid
     dim_grid->x = (width + dim_block->x - 1) / dim_block->x;
     dim_grid->y = (height + dim_block->y - 1) / dim_block->y;
-    dim_grid->z = 1;
+    // dim_grid->z = 1;
 
     // Debug menggunakan printf
     printf("[Optimal CUDA Config]\n");
     printf("  GPU: %s\n", prop.name);
     printf("  Warp size: %d\n", warpSize);
     printf("  Threads/Block (target): %d\n", threadsPerBlock);
-    printf("  dim_block: (%d, %d, 1)\n", dim_block->x, dim_block->y);
-    printf("  dim_grid: (%d, %d, 1)\n", dim_grid->x, dim_grid->y);
+    printf("  dim_block: (%d, %d)\n", dim_block->x, dim_block->y);
+    printf("  dim_grid: (%d, %d)\n", dim_grid->x, dim_grid->y);
 }
+

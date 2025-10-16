@@ -45,5 +45,8 @@ $(BIN_DIR)/%.o: %.cu
 clean:
 	rm -f $(BIN_DIR)/*.o $(TARGET)
 
+run:
+	./main 0 ../test_cases/birds.jpg birds-0.jpg > output.txt
+
 # Phony targets
 .PHONY: all clean

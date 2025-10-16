@@ -37,6 +37,10 @@ int main(int argc,char*argv[]){
         }
     }
 
+    // svae/load CONTROL
+    image_t control_image = loadJPG(inputFile);
+    saveJPG(control_image, "control.jpg");
+
     auto t0 = std::chrono::high_resolution_clock::now();
     image_t img = loadJPG(inputFile);
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -49,10 +53,11 @@ int main(int argc,char*argv[]){
     auto tProc   = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
     auto tOutput = std::chrono::duration_cast<std::chrono::milliseconds>(t3-t2).count();
 
-    std::cout << "================ Sobel Edge Detection ================\n";
+    std::cout << "\n================ Sobel Edge Detection ================\n";
     std::cout << "Program Type : CUDA\n";
     std::cout << "------------------------------------------------------\n";
     std::cout << "Mode         : " << mode << "\n";
+    std::cout << "Image size   : w = " << img.w << " h = " << img.h << "\n";
     if (!thresholds.empty()) {
         std::cout << "Threshold(s) : ";
         for (auto t : thresholds) std::cout << t << " ";
@@ -67,4 +72,5 @@ int main(int argc,char*argv[]){
 
     // Bebaskan Memori
     DELETE(img);
+    DELETE(control_image);
 }
