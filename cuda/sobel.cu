@@ -50,7 +50,7 @@ void sobel(image_t *h_img, int mode, int *h_arr_thresholds) {
 
     // Find best config
     dim3 dim_grid, dim_block;
-    getOptimalConfig(h_img->w, h_img->h, &dim_grid, &dim_block);
+    get_optimal_config(h_img->w, h_img->h, &dim_grid, &dim_block);
 
     // Kernel launch
     kernel_sobel_raw<<<dim_grid, dim_block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);

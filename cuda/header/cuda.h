@@ -19,6 +19,6 @@
 void sobel(image_t *h_img, int h_mode, int *h_arr_thresholds);
 
 /* CUDA OPTIMIZER */
-void getOptimalConfig(int width, int height, dim3 *grid_dim, dim3 *dim_block);
+void get_optimal_config(int width, int height, dim3 *grid_dim, dim3 *dim_block);
 
 #endif
