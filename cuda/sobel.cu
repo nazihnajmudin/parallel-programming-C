@@ -2,10 +2,13 @@
 #include "header/image.h"
 
 void sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3 *dim_block, unsigned char cuda_type) {
+    
+    cudaStream_t stream1;
+    cudaStreamCreate(&stream1);
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    cudaEventRecord(start);
+    cudaEventRecord(start, stream1);
 
     unsigned char *d_p, *d_p_out;
     int *d_arr_thresholds;
@@ -21,7 +24,7 @@ void sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3
     unsigned char *h_pinned;
     CUDA_CHECK(cudaMallocHost((void**)&h_pinned, size_p));
     memcpy(h_pinned, h_img->p, size_p);
-    CUDA_CHECK(cudaMemcpyAsync(d_p, h_pinned, size_p, cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpyAsync(d_p, h_pinned, size_p, cudaMemcpyHostToDevice, stream1));
     
     // Copy struct & other parameters
     CUDA_CHECK(cudaMemcpy(d_arr_thresholds, h_arr_thresholds, mode * sizeof(int), cudaMemcpyHostToDevice));
@@ -33,16 +36,16 @@ void sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3
     size_t smem_size = (dim_block->x + 2) * (dim_block->y + 2) * sizeof(unsigned char);
     switch (cuda_type) {
         case 'r': // cuda_raw
-            kernel_sobel_raw<<<*dim_grid, *dim_block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
+            kernel_sobel_raw<<<*dim_grid, *dim_block, 0, stream1>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
             break;
         case 's': // cuda_raw 16 x 16
-            kernel_sobel_raw<<<grid, block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
+            kernel_sobel_raw<<<grid, block, 0, stream1>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
             break;
         case 'm': // cuda_shared memory
-            kernel_sobel_shared<<<grid, block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
+            kernel_sobel_shared<<<grid, block, 0, stream1>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
             break;
         case 'd': // cuda_shared_dyn
-            kernel_sobel_tiled<<<*dim_grid, *dim_block, smem_size>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
+            kernel_sobel_tiled<<<*dim_grid, *dim_block, smem_size, stream1>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
             break;
         default:
             break;
@@ -59,13 +62,18 @@ void sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3
     CUDA_CHECK(cudaFree(d_arr_thresholds));
     CUDA_CHECK(cudaFree(d_p));
     CUDA_CHECK(cudaFree(d_p_out));
-
-    cudaEventRecord(stop);
+    
+    cudaEventRecord(stop, stream1);
     cudaEventSynchronize(stop);
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 
+    cudaStreamSynchronize(stream1);
+    cudaStreamDestroy(stream1);
+
     printf("CUDA event benchmark: %f ms\n", milliseconds);
+
+    
 }
