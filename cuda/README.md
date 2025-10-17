@@ -1,16 +1,15 @@
 # Parallelization Report — Sobel Edge Detection with CUDA
 
 ## Team Information
-- **Team ID:**  
-- **Class:**  
+- **Team ID :**  barracuda
+- **Class   :**  K3
 
 ### Members
-| Name      | Student ID |
-|-----------|------------|
-| Name 1    | ID1        |
-| Name 2    | ID2        |
-| Name 3    | ID3        |
-| ...       | ...        |
+| Name                      | Student ID      |
+|---------------------------|-----------------|
+| Ahmad Wafi Idzharulhaq    | 13523131        |
+| Muhamad Nazih Najmudin    | 13523144        |
+| Lukas Raja Agripa         | 13523158        |
 
 
 
@@ -31,24 +30,32 @@
 
 
 ## 1. Introduction
-Provide a short description of the purpose of this assignment, the Sobel edge detection algorithm in the given code, and the goal of applying OpenMPI parallelization.
+Tugas ini bertujuan untuk mengimplementasikan paralelisasi algoritma Sobel Edge Detection menggunakan CUDA. Sobel Edge Detection adalah algoritma pengolahan citra yang digunakan untuk mendeteksi tepi (edge) pada gambar dengan menerapkan operator konvolusi menggunakan kernel Sobel.
 
+Algoritma Sobel bekerja dengan menghitung gradien intensitas gambar menggunakan dua kernel 3x3 untuk mendeteksi perubahan horizontal dan vertikal. Hasil dari kedua gradien tersebut dikombinasikan untuk menghasilkan magnitude gradien yang kemudian dibandingkan dengan threshold untuk menentukan apakah suatu pixel merupakan tepi atau bukan.
+
+Tujuan dari penerapan paralelisasi dengan CUDA adalah untuk meningkatkan performa komputasi dengan memanfaatkan GPU. CUDA memungkinkan pembagian beban kerja komputasi setiap pixel secara paralel, sehingga harapannya waktu pemrosesan dapat berkurang secara signifikan dibandingkan dengan implementasi serial.
 
 
 ## 2. Theory: Parallelizable Operations
-Explain which operations or functions in the program can be parallelized and why.  
-Examples:
-- Pixel-by-pixel convolution in the Sobel operator is independent and can be distributed across processes.  
-- Gradient magnitude and thresholding can also be computed in parallel since each pixel is independent.  
-- Image I/O is not parallelized as it does not benefit significantly from MPI.  
+Pada kasus ini, operasi dan fungsi yang dapat diparalelisasi adalah:
+- Perhituangn konvolusi piksel-piksel dalam algoritma Sobel bersifat independen dan dapat didistribusikan ke seluruh proses.  
+- Perhitunagn gradien dan threshold dapat dihitung secara paralel karena setiap piksel bersifat independen.  
+- Grayscaling gambar sebetulnya juga dapat diparalelisasi, tetapi kata asisten harus pakai cv::IMREAD_GRAYSCALE
 
 
 ## 3. Code Changes and Implementation
 ### 3.1 Parallelization Strategy
-Describe how the workload is divided among MPI processes (e.g., row-wise distribution, block distribution). Mention how many processes you tested.
+Paralelisasi dengan CUDA bekerja dengan membagi setiap pemrosesan sebuah piksel gambar ke dalam thread-thread berbeda. Setiap pemrosesan piksel bersifat independen, sehingga seluruh proses mencakup konvolusi dan perhitungan gradien untuk setiap piksel dilakukan pada setiap CUDA thread. 
+
+Strategi Optimasi Overhead:
+- Mencari ukuran dimensi block dan dimensi grid yang tepat berdasarkan kemampuan GPU user.
+- Pembagian block mengikuti aturan persegi dengan ukuran kelipatan warp size.
+- Penyalinan data dari CPU ke GPU relatif mahal, sehingga cudaMalloc dipanggil se-sedikit mungkin. Selain itu juga dioptimasi dengan pinned memory.
+- Akses global memory diminimasi dengan membuat shared memory.
 
 ### 3.2 Code Modifications
-Document the changes you made to the code. Use **before vs after** snippets and provide explanations.
+Paralelisasi ini mengubah perhitungan nested loop menjadi kernel CUDA. Sebagai eksperimen, terdapat 
 
 Example:
 

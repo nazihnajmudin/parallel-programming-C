@@ -1,36 +1,11 @@
 #include "header/cuda.h"
 #include "header/image.h"
 
-__global__ void kernel_sobel_raw(unsigned char *in, unsigned char *out, int w, int h, int mode, int *d_thresholds) {
-    // Cara indexing gambar sudah sesuai dengan indexing di cuda
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if (x >= w || y >= h) return;
-
-    // Convolution
-    int ver = 0, hor = 0;
-    if (x > 0 && x < w-1 && y > 0 && y < h-1) {
-        ver = in[(y+1)*w + (x-1)] + 2*in[(y+1)*w + x] + in[(y+1)*w + (x+1)]
-        - (in[(y-1)*w + (x-1)] + 2*in[(y-1)*w + x] + in[(y-1)*w + (x+1)]);
-        hor = in[(y-1)*w + (x+1)] + 2*in[y*w + (x+1)] + in[(y+1)*w + (x+1)]
-        - (in[(y-1)*w + (x-1)] + 2*in[y*w + (x-1)] + in[(y+1)*w + (x-1)]);
-    }
-    int g = (int)sqrtf(ver*ver + hor*hor);
-    
-    // Output
-    if (mode == 0) {
-        out[y*w + x] = min(g, 255);
-    } else if (mode == 1) {
-        out[y*w + x] = (g > d_thresholds[0]) ? 0 : 255;
-    } else {
-        int bins = mode + 1;
-        int idx = 0;
-        while (idx < mode && g > d_thresholds[idx]) idx++;
-        out[y*w + x] = (255 * idx) / (bins - 1);
-    }
-}
-
-void sobel(image_t *h_img, int mode, int *h_arr_thresholds) {
+void sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3 *dim_block, unsigned char cuda_type) {
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start);
 
     unsigned char *d_p, *d_p_out;
     int *d_arr_thresholds;
@@ -43,25 +18,54 @@ void sobel(image_t *h_img, int mode, int *h_arr_thresholds) {
     CUDA_CHECK(cudaMalloc((void**)&d_arr_thresholds, max(mode, 1) * sizeof(int)));
 
     // Copy image data
-    CUDA_CHECK(cudaMemcpy(d_p, h_img->p, size_p, cudaMemcpyHostToDevice));
-
+    unsigned char *h_pinned;
+    CUDA_CHECK(cudaMallocHost((void**)&h_pinned, size_p));
+    memcpy(h_pinned, h_img->p, size_p);
+    CUDA_CHECK(cudaMemcpyAsync(d_p, h_pinned, size_p, cudaMemcpyHostToDevice));
+    
     // Copy struct & other parameters
     CUDA_CHECK(cudaMemcpy(d_arr_thresholds, h_arr_thresholds, mode * sizeof(int), cudaMemcpyHostToDevice));
-
-    // Find best config
-    dim3 dim_grid, dim_block;
-    get_optimal_config(h_img->w, h_img->h, &dim_grid, &dim_block);
-
+    
     // Kernel launch
-    kernel_sobel_raw<<<dim_grid, dim_block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
-    CUDA_CHECK(cudaGetLastError());         // Check launch errors
-    CUDA_CHECK(cudaDeviceSynchronize());    // Check execution errors
+    dim3 block(BLOCK_SIZE, BLOCK_SIZE);
+    dim3 grid((h_img->w + BLOCK_SIZE - 1) / BLOCK_SIZE,
+    (h_img->h + BLOCK_SIZE - 1) / BLOCK_SIZE);
+    size_t smem_size = (dim_block->x + 2) * (dim_block->y + 2) * sizeof(unsigned char);
+    switch (cuda_type) {
+        case 'r': // cuda_raw
+            kernel_sobel_raw<<<*dim_grid, *dim_block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
+            break;
+        case 's': // cuda_raw 16 x 16
+            kernel_sobel_raw<<<grid, block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
+            break;
+        case 'm': // cuda_shared memory
+            kernel_sobel_shared<<<grid, block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
+            break;
+        case 'd': // cuda_shared_dyn
+            kernel_sobel_tiled<<<*dim_grid, *dim_block, smem_size>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
+            break;
+        default:
+            break;
+    }
+    // CUDA_CHECK(cudaGetLastError());         // Check launch errors
+    // CUDA_CHECK(cudaDeviceSynchronize());    // Check execution errors <-- katanya ini memperlambat
 
     // Copy back results
-    CUDA_CHECK(cudaMemcpy(h_img->p, d_p_out, size_p, cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(h_pinned, d_p_out, size_p, cudaMemcpyDeviceToHost));
+    memcpy(h_img->p, h_pinned, size_p);
+    CUDA_CHECK(cudaFreeHost(h_pinned));
 
     // Free device memory
     CUDA_CHECK(cudaFree(d_arr_thresholds));
     CUDA_CHECK(cudaFree(d_p));
     CUDA_CHECK(cudaFree(d_p_out));
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+
+    printf("CUDA event benchmark: %f ms\n", milliseconds);
 }

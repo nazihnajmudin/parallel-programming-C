@@ -1,0 +1,38 @@
+# jalankan semua kombinasi untuk ini
+cuda/main [type] [block] [n] test_cases/[name].jpg output/cuda-[name]-[type]-[block]-[n].jpg > txt/cuda-[name]-[type]-[block]-[n].txt
+
+# jalankan semua kombinasi untuk ini
+serial/serial [n] test_cases/[name].jpg output/serial-[name]-[n].jpg > txt/serial-[name]-[n].txt
+
+# kombinasi
+[type]: raw shared
+[block]: s d
+[n]: 0 1 5
+[name]: get name of all jpg in test_cases/
+
+# urutan hirarki kombinasi:
+1. serial/cuda
+2. n
+3. type
+4. block
+5. name
+contoh: 
+serial-gambarX-0.jpg
+serial-gambarY-0.jpg
+serial-gambarZ-0.jpg
+serial-gambarX-1.jpg
+... 
+
+untuk setiap grup [serial/cuda][n][type][block]
+tuliskan waktu eksekusinya setelah selesai memproses seluruh gambar.
+
+
+# alternatif urutan:
+1. name
+2. serial/cuda
+3. type
+4. block
+5. n
+
+untuk setiap grup [name][serial/cuda][type][block]
+tuliskan waktu eksekusinya setelah selesai memproses kombinasi [n].

@@ -12,7 +12,7 @@ OPENCV_LIBS = $(shell pkg-config --libs opencv4)
 BIN_DIR = bin
 
 # Source files
-SOURCES = main.cpp image.cpp sobel.cu optimizer.cu
+SOURCES = main.cpp image.cpp sobel.cu sobel_raw.cu sobel_sm-16x16.cu sobel_sm-dyn.cu optimizer.cu
 
 # Object files di folder BIN_DIR
 OBJECTS = $(patsubst %.cpp,$(BIN_DIR)/%.o,$(SOURCES))
@@ -46,7 +46,7 @@ clean:
 	rm -f $(BIN_DIR)/*.o $(TARGET)
 
 run:
-	./main 0 ../test_cases/birds.jpg birds-0.jpg > output.txt
+	./main 0 ../test_cases/fish.jpg fish-0.jpg > output.txt
 
 # Phony targets
 .PHONY: all clean

@@ -6,14 +6,35 @@
 #include <chrono>
 
 int main(int argc,char*argv[]){
-    if(argc<4){
-        std::cerr<<"Usage: ./main n input.jpg output.jpg > output.txt\n";
+    if(argc<6){
+        std::cerr<<"Usage: ./main [cuda_type] [block_size] n input.jpg output.jpg > output.txt\n";
+        std::cout << "[cuda_type] raw shared\n";
+        std::cout << "[block_size] s for static (16x16), d for dynamic\n";
         return 1;
     }
+    
+    std::string type = argv[1];
+    std::string bs = argv[2];
 
-    int n = std::stoi(argv[1]);
-    std::string inputFile  = argv[2];
-    std::string outputFile = argv[3];
+    int n = std::stoi(argv[3]);
+    std::string inputFile  = argv[4];
+    std::string outputFile = argv[5];
+
+    unsigned char cuda_type = 'x';
+    if (type == "raw" && bs == "s") {
+        cuda_type = 's';
+    } else if (type == "raw" && bs == "d") {
+        cuda_type = 'r';
+    } else if (type == "shared" && bs == "s") {
+        cuda_type = 'm';
+    } else if (type == "shared" && bs == "d") {
+        cuda_type = 'd';
+    } else {
+        std::cerr<<"Usage: ./main [cuda_type] [block_size] n input.jpg output.jpg > output.txt\n";
+        std::cout << "[cuda_type] raw shared\n";
+        std::cout << "[block_size] s for static (16x16), d for dynamic\n";
+        return 1;
+    }
 
     if (n < 0) {
         std::cerr<<"Error: n must be greater than or equal to 0\n";
@@ -39,8 +60,15 @@ int main(int argc,char*argv[]){
 
     auto t0 = std::chrono::high_resolution_clock::now();
     image_t img = loadJPG(inputFile);
+    
+    // Find best config
+    dim3 dim_grid, dim_block;
+    if (cuda_type=='r' || cuda_type=='d')
+    get_optimal_config(img.w-2, img.h-2, &dim_grid, &dim_block);
+    
     auto t1 = std::chrono::high_resolution_clock::now();
-    sobel(&img, mode, thresholds.data());
+    sobel(&img, mode, thresholds.data(), &dim_grid, &dim_block, cuda_type);
+    
     auto t2 = std::chrono::high_resolution_clock::now();
     saveJPG(img, outputFile);
     auto t3 = std::chrono::high_resolution_clock::now();
