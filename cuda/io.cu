@@ -1,5 +1,5 @@
 #include "header/image.h"
-#include "header/io.hpp"
+#include "header/io.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -10,9 +10,7 @@ image_t loadJPG(const std::string &f) {
     }
 
     image_t img;
-    img.w = mat.cols;
-    img.h = mat.rows;
-    img.p = new unsigned char[img.w * img.h]; // wajib delete[] img.p
+    createImage(&img, mat.cols, mat.rows);
 
     for (int y = 0; y < img.h; y++) {
         for (int x = 0; x < img.w; x++) {

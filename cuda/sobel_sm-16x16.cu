@@ -1,7 +1,7 @@
 #include "header/cuda.h"
 #include "header/image.h"
 
-__global__ void kernel_sobel_shared(unsigned char *in, unsigned char *out, int w, int h, int mode, int *d_thresholds) {
+__global__ void kernel_sobel_shared(unsigned char *pixel, int w, int h, int mode, int *d_thresholds) {
     __shared__ unsigned char tile[BLOCK_SIZE + 2][BLOCK_SIZE + 2];
 
     int tx = threadIdx.x;
@@ -14,28 +14,28 @@ __global__ void kernel_sobel_shared(unsigned char *in, unsigned char *out, int w
     int gy = min(max(y, 0), h - 1);
 
     // Load main pixel
-    tile[ty + 1][tx + 1] = in[gy * w + gx];
+    tile[ty + 1][tx + 1] = pixel[gy * w + gx];
 
     // Load halo region (edges of tile)
     if (tx == 0 && gx > 0)
-        tile[ty + 1][0] = in[gy * w + gx - 1];
+        tile[ty + 1][0] = pixel[gy * w + gx - 1];
     if (tx == BLOCK_SIZE - 1 && gx < w - 1)
-        tile[ty + 1][BLOCK_SIZE + 1] = in[gy * w + gx + 1];
+        tile[ty + 1][BLOCK_SIZE + 1] = pixel[gy * w + gx + 1];
     if (ty == 0 && gy > 0)
-        tile[0][tx + 1] = in[(gy - 1) * w + gx];
+        tile[0][tx + 1] = pixel[(gy - 1) * w + gx];
     if (ty == BLOCK_SIZE - 1 && gy < h - 1)
-        tile[BLOCK_SIZE + 1][tx + 1] = in[(gy + 1) * w + gx];
+        tile[BLOCK_SIZE + 1][tx + 1] = pixel[(gy + 1) * w + gx];
 
     // Load corners (optional, for correctness)
     if (tx == 0 && ty == 0 && gx > 0 && gy > 0)
-        tile[0][0] = in[(gy - 1) * w + gx - 1];
+        tile[0][0] = pixel[(gy - 1) * w + gx - 1];
     if (tx == BLOCK_SIZE - 1 && ty == 0 && gx < w - 1 && gy > 0)
-        tile[0][BLOCK_SIZE + 1] = in[(gy - 1) * w + gx + 1];
+        tile[0][BLOCK_SIZE + 1] = pixel[(gy - 1) * w + gx + 1];
     if (tx == 0 && ty == BLOCK_SIZE - 1 && gx > 0 && gy < h - 1)
-        tile[BLOCK_SIZE + 1][0] = in[(gy + 1) * w + gx - 1];
+        tile[BLOCK_SIZE + 1][0] = pixel[(gy + 1) * w + gx - 1];
     if (tx == BLOCK_SIZE - 1 && ty == BLOCK_SIZE - 1 &&
         gx < w - 1 && gy < h - 1)
-        tile[BLOCK_SIZE + 1][BLOCK_SIZE + 1] = in[(gy + 1) * w + gx + 1];
+        tile[BLOCK_SIZE + 1][BLOCK_SIZE + 1] = pixel[(gy + 1) * w + gx + 1];
 
     __syncthreads();
 
@@ -52,13 +52,13 @@ __global__ void kernel_sobel_shared(unsigned char *in, unsigned char *out, int w
     int g = (int)sqrtf(ver * ver + hor * hor);
 
     if (mode == 0) {
-        out[y * w + x] = min(g, 255);
+        pixel[y * w + x] = min(g, 255);
     } else if (mode == 1) {
-        out[y * w + x] = (g > d_thresholds[0]) ? 0 : 255;
+        pixel[y * w + x] = (g > d_thresholds[0]) ? 0 : 255;
     } else {
         int bins = mode + 1;
         int idx = 0;
         while (idx < mode && g > d_thresholds[idx]) idx++;
-        out[y * w + x] = (255 * idx) / (bins - 1);
+        pixel[y * w + x] = (255 * idx) / (bins - 1);
     }
 }

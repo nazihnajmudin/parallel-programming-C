@@ -2,8 +2,7 @@
 #include "header/image.h"
 
 __global__
-void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigned char* out,
-                        int w, int h, int mode, const int* d_thresholds) {
+void kernel_sobel_tiled(unsigned char* __restrict__ pixel, int w, int h, int mode, const int* d_thresholds) {
     const int BX = blockDim.x;
     const int BY = blockDim.y;
     const int sW = BX + 2;   // shared width (cols)
@@ -33,7 +32,7 @@ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigned char* out
         glob_x = (glob_x < 0) ? 0 : ( (glob_x >= w) ? (w-1) : glob_x );
         glob_y = (glob_y < 0) ? 0 : ( (glob_y >= h) ? (h-1) : glob_y );
 
-        s[i] = in[glob_y * w + glob_x];
+        s[i] = pixel[glob_y * w + glob_x];
     }
 
     __syncthreads();
@@ -56,13 +55,13 @@ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigned char* out
 
     // write result
     if (mode == 0) {
-        out[y*w + x] = (unsigned char) min(g, 255);
+        pixel[y*w + x] = (unsigned char) min(g, 255);
     } else if (mode == 1) {
-        out[y*w + x] = (g > d_thresholds[0]) ? 0 : 255;
+        pixel[y*w + x] = (g > d_thresholds[0]) ? 0 : 255;
     } else {
         int bins = mode + 1;
         int idx = 0;
         while (idx < mode && g > d_thresholds[idx]) idx++;
-        out[y*w + x] = (255 * idx) / (bins - 1);
+        pixel[y*w + x] = (255 * idx) / (bins - 1);
     }
 }

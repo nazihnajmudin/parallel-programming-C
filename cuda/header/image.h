@@ -15,4 +15,9 @@ typedef struct image_t {
 #define FREE(img) free(img.p)       // free malloc C
 #define DELETE(img) delete[] img.p  // delete new C++
 
+/* DIRECT CUDA ACCESS */
+void createImage(image_t *img, int w, int h);
+
+void deleteImage(image_t *img);
+
 #endif
