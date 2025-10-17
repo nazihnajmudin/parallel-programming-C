@@ -11,11 +11,17 @@ void sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3
     cudaEventRecord(start, stream1);
 
     int *d_arr_thresholds;
+    size_t size_p = h_img->w * h_img->h * sizeof(unsigned char);
 
     // GPU Memory Allocation
     CUDA_CHECK(cudaMalloc((void**)&d_arr_thresholds, max(mode, 1) * sizeof(int)));
     CUDA_CHECK(cudaMemcpy(d_arr_thresholds, h_arr_thresholds, mode * sizeof(int), cudaMemcpyHostToDevice));
     
+    // Prefetch ke device sebelum kernel
+    int device;
+    cudaGetDevice(&device);
+    cudaMemPrefetchAsync(h_img->p, size_p, device, 0);
+
     // Kernel launch
     dim3 block(BLOCK_SIZE, BLOCK_SIZE);
     dim3 grid((h_img->w + BLOCK_SIZE - 1) / BLOCK_SIZE,
@@ -39,6 +45,8 @@ void sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3
     }
     // CUDA_CHECK(cudaGetLastError());         // Check launch errors
     CUDA_CHECK(cudaDeviceSynchronize());    // Check execution errors <-- katanya ini memperlambat
+    // Prefetch balik ke host sebelum akses CPU
+    cudaMemPrefetchAsync(h_img->p, size_p, cudaCpuDeviceId, 0);
 
     // Free device memory
     CUDA_CHECK(cudaFree(d_arr_thresholds));

@@ -17,7 +17,6 @@ __global__ void kernel_sobel_raw(unsigned char *pixel, int w, int h, int mode, i
         - (pixel[(y-1)*w + (x-1)] + 2*pixel[y*w + (x-1)] + pixel[(y+1)*w + (x-1)]);
     }
     int g = (int)sqrtf(ver*ver + hor*hor);
-    __syncthreads();
 
     // Output
     if (mode == 0) {
