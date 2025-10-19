@@ -1,0 +1,10 @@
+<=== Hasil Komputasi Menggunakan Avx2 ===>
+<> Input  : ../test_cases/view.jpg
+<> Output : output/jpg/test_1_avx_view.jpg
+<> Mode   : 1
+Thresholds : 128
+
+Waktu Eksekusi:
+  - Input      : 50 ms
+  - Processing : 45 ms
+  - Output     : 41 ms
