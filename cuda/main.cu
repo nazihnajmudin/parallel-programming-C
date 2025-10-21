@@ -42,7 +42,6 @@ int main(int argc,char*argv[]){
         return 1;
     }
 
-    
     int mode;
     std::vector<int> thresholds;
     
@@ -61,22 +60,23 @@ int main(int argc,char*argv[]){
 
     auto t0 = std::chrono::high_resolution_clock::now();
     image_t img = loadJPG(inputFile);
+    auto t1 = std::chrono::high_resolution_clock::now();
     
     // Find best config
     dim3 dim_grid, dim_block;
     if (cuda_type=='r' || cuda_type=='d')
     get_optimal_config(img.w-2, img.h-2, &dim_grid, &dim_block);
     
-    auto t1 = std::chrono::high_resolution_clock::now();
-    sobel(&img, mode, thresholds.data(), &dim_grid, &dim_block, cuda_type);
-    
     auto t2 = std::chrono::high_resolution_clock::now();
-    saveJPG(img, outputFile);
+    cudaExecTime_t sobel_time = sobel(&img, mode, thresholds.data(), &dim_grid, &dim_block, cuda_type);
     auto t3 = std::chrono::high_resolution_clock::now();
+    
+    saveJPG(img, outputFile);
+    auto t4 = std::chrono::high_resolution_clock::now();
 
     auto tInput  = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
-    auto tProc   = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-    auto tOutput = std::chrono::duration_cast<std::chrono::milliseconds>(t3-t2).count();
+    auto tProc   = std::chrono::duration_cast<std::chrono::milliseconds>(t3-t2).count();
+    auto tOutput = std::chrono::duration_cast<std::chrono::milliseconds>(t4-t3).count();
 
     std::cout << "\n================ Sobel Edge Detection ================\n";
     std::cout << "Program Type : CUDA\n";
@@ -93,6 +93,23 @@ int main(int argc,char*argv[]){
     std::cout << "  Input      : " << tInput  << "\n";
     std::cout << "  Processing : " << tProc   << "\n";
     std::cout << "  Output     : " << tOutput << "\n";
+    std::cout << "------------------------------------------------------\n";
+    std::cout << "CUDA benchmark (ms)\n";
+    std::cout << "  Kernel     : " << sobel_time.kernel_time << "\n";
+    std::cout << "  Malloc     : " << sobel_time.malloc_time << "\n";
+    std::cout << "  Memcpy     : " << sobel_time.memcpy_time << "\n";
+    std::cout << "  Free       : " << sobel_time.cufree_time << "\n";
+    std::cout << "------------------------------------------------------\n";
+    std::cout << "Benchmarking & Other Services (ms)\n";
+    std::cout << "  = Processing - TotalCUDAbenchmark\n";
+    std::cout << "  = " << tProc << " - " << (  sobel_time.kernel_time +
+                                                sobel_time.malloc_time +
+                                                sobel_time.memcpy_time + 
+                                                sobel_time.cufree_time) << "\n";
+    std::cout << "  = " <<  (tProc-(sobel_time.kernel_time
+                                    +sobel_time.malloc_time
+                                    +sobel_time.memcpy_time 
+                                    +sobel_time.cufree_time)) << "\n";
     std::cout << "======================================================\n";
 
     // Bebaskan Memori
