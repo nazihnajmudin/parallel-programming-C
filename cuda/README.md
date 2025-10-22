@@ -362,7 +362,6 @@ A:
 1. [Materi Kuliah Sisparter ITB - GPU Intro](https://cdn-edunex.itb.ac.id/38097-Parallel-and-Distributed-Systems-Parallel-Class/73157-GPU/1645584641212_IF3230-06a-GPU-2022.pdf)
 2. [Materi Kuliah Sisparter ITB - GPU In a Nutshell](https://cdn-edunex.itb.ac.id/38097-Parallel-and-Distributed-Systems-Parallel-Class/73157-GPU/1645584666556_IF-3230-07-GPU-01-2022.pdf)
 
----
 
 ## 8. How to Run
 
