@@ -27,7 +27,7 @@
 8. [References](#8-references)  
 9. [How to Run](#9-how-to-run)  
 
----
+
 
 ## 1. Introduction
 Tugas ini bertujuan untuk mengimplementasikan paralelisasi algoritma Sobel Edge Detection menggunakan CUDA. Sobel Edge Detection adalah algoritma pengolahan citra yang digunakan untuk mendeteksi tepi (edge) pada gambar dengan menerapkan operator konvolusi menggunakan kernel Sobel.
@@ -36,7 +36,7 @@ Algoritma Sobel bekerja dengan menghitung gradien intensitas gambar menggunakan 
 
 Tujuan dari penerapan paralelisasi dengan CUDA adalah untuk meningkatkan performa komputasi dengan memanfaatkan GPU. CUDA memungkinkan pembagian beban kerja komputasi setiap pixel secara paralel, sehingga harapannya waktu pemrosesan dapat berkurang secara signifikan dibandingkan dengan implementasi serial.
 
----
+
 
 ## 2. Theory: Parallelizable Operations
 Pada kasus ini, operasi dan fungsi yang dapat diparalelisasi adalah:
@@ -44,7 +44,7 @@ Pada kasus ini, operasi dan fungsi yang dapat diparalelisasi adalah:
 - Perhitunagn gradien dan threshold dapat dihitung secara paralel karena setiap piksel bersifat independen.  
 - Grayscaling gambar sebetulnya juga dapat diparalelisasi, tetapi kata asisten harus pakai cv::IMREAD_GRAYSCALE
 
----
+
 
 ## 3. Code Changes and Implementation
 ### 3.1 Parallelization Strategy
@@ -59,7 +59,7 @@ Strategi Optimasi Overhead:
 ### 3.2 Code Modifications
 Paralelisasi ini mengubah perhitungan nested loop menjadi kernel CUDA. Serta mengubah perhitungan konvolusi menjadi unroll version.
 
-Before:
+**Before:**
 ```cpp
 // Serial version loop
     int Gx[3][3]={{-1,0,1},{-2,0,2},{-1,0,1}};
@@ -81,7 +81,8 @@ Before:
         }
     }
 ```
-After:
+
+**After:**
 ``` cpp
 // Parallel version with CUDA (sobel_kernel without shared memory)
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -100,9 +101,9 @@ After:
     int g = (int)sqrtf(ver*ver + hor*hor);
 ```
 
-Contoh diatas merupakan perubahan untuk tipe kernel cuda tanpa shared memory. Untuk implementasi shared memory, terdapat dua versi yaitu versi dengan static block size (16 x 16) dan versi dengan runtime block size (ditentukan oleh fungsi get_optimal_config yang mencari konfigurasi dimensi grid dan blok terbaik sesuai spesifikasi GPU)
+Contoh tersebut merupakan perubahan untuk tipe kernel cuda tanpa shared memory. Untuk implementasi shared memory, terdapat dua versi yaitu versi dengan static block size (16 x 16) dan versi dengan runtime block size (ditentukan oleh fungsi get_optimal_config yang mencari konfigurasi dimensi grid dan blok terbaik sesuai spesifikasi GPU)
 
-Static Block Sized Shared Memory Kernel:
+**Static Block Sized Shared Memory Kernel:**
 ``` cpp
 __global__ void kernel_sobel_shared(unsigned char *in, unsigned char *out, int w, int h, int mode, int *d_thresholds) {
     __shared__ unsigned char tile[BLOCK_SIZE + 2][BLOCK_SIZE + 2];
@@ -154,7 +155,8 @@ __global__ void kernel_sobel_shared(unsigned char *in, unsigned char *out, int w
         (tile[ty][tx] + 2 * tile[ty + 1][tx] + tile[ty + 2][tx]);
     int g = (int)sqrtf(ver * ver + hor * hor);
 ```
-Optimize Block Sized Shared Memory Kernel:
+
+**Optimize Block Sized Shared Memory Kernel:**
 ``` cpp
 __global__ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigned char* out,
                         int w, int h, int mode, const int* d_thresholds) {
@@ -209,7 +211,7 @@ __global__ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigne
     int g = (int)sqrtf((float)(ver*ver + hor*hor));
 ```
 
----
+
 
 ## 4. Results and Evaluation
 
@@ -298,9 +300,9 @@ __global__ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigne
 
 ### 4.4 Observations
 
-#### Correctness
+### A. Correctness
 Semua output paralel identik dengan hasil serial. Hal ini menunjukkan bahwa semua implementasi kernel CUDA (biasa, shared memory 16x16, dan shared memory optimized block dim) berfungsi dengan benar dan menghasilkan hasil edge detection Sobel yang sesuai dengan algoritma versi serial.
-#### Performance
+### B. Performance
 Perbandingan waktu menunjukkan bahwa versi Paralel (CUDA) secara konsisten lebih cepat dalam Processing Time (waktu pemrosesan kernel) dibandingkan dengan versi Serial, terutama untuk citra yang lebih besar/membutuhkan waktu pemrosesan serial yang lama.
 * **Pengurangan Waktu Pemrosesan Kernel**
     - Pada citra fish.jpg (waktu pemrosesan serial tertinggi 477 ms), waktu pemrosesan paralel anjlok signifikan menjadi antara 14 ms hingga  37 ms.
@@ -311,7 +313,7 @@ Perbandingan waktu menunjukkan bahwa versi Paralel (CUDA) secara konsisten lebih
     - Untuk beberapa citra besar (fish.jpg, view.jpg), optimasi shared memory (shared-d atau shared-s) memberikan waktu pemrosesan kernel yang terendah, menunjukkan bahwa shared memory berhasil mengurangi latensi memori.
     - Pengaruh ukuran blok (d optimal vs s 16 x 16) tidak konsisten. Misalnya, untuk fish.jpg, shared-d (14 ms) sedikit lebih cepat daripada shared-s (37 ms), sedangkan untuk view.jpg, shared-d (6 ms) jauh lebih cepat daripada shared-s (9 ms).
 * **Total Waktu Program**
-Total waktu program (Input + Processing + Output) untuk versi Paralel jauh lebih rendah daripada Serial untuk citra besar (fish.jpg: 1239 ms serial vs 676 ms paralel terbaik; view.jpg: 435 ms serial vs 183 ms paralel terbaik), namun masih didominasi oleh waktu Input dan Output (data transfer dari CPU ke GPU dan sebaliknya, serta loading/saving JPG).
+    - Total waktu program (Input + Processing + Output) untuk versi Paralel jauh lebih rendah daripada Serial untuk citra besar (fish.jpg: 1239 ms serial vs 676 ms paralel terbaik; view.jpg: 435 ms serial vs 183 ms paralel terbaik), namun masih didominasi oleh waktu Input dan Output (data transfer dari CPU ke GPU dan sebaliknya, serta loading/saving JPG).
 
 ### 4.5 Analysis
 Perhitungan SpeedUp mengonfirmasi observasi performa, namun memberikan pemahaman lebih mendalam tentang efektivitas paralelisasi.
@@ -319,13 +321,13 @@ Perhitungan SpeedUp mengonfirmasi observasi performa, namun memberikan pemahaman
     - SpeedUp pada waktu pemrosesan kernel saja sangat besar, terutama pada citra yang lebih besar atau kompleks seperti fish.jpg, mencapai hingga 34.071 x (shared-d). Hal ini menunjukkan bahwa algoritma pemrosesan yang diparalelkan (filter Sobel) adalah bottleneck yang sangat efektif diparalelkan pada GPU.
     - SpeedUp total program jauh lebih kecil, berkisar antara 1.063 x (lion.jpg, shared-d) hingga 2.485 x (lion.jpg, raw-s). Pada citra fish.jpg, SpeedUp total hanya 1.431 x hingga 1.833 x, meskipun SpeedUp kernelnya sangat tinggi.
 * **Pengaruh Hukum Amdahl**
-Rendahnya SpeedUp total meskipun SpeedUp kernel sangat tinggi adalah fenomena yang dijelaskan oleh Hukum Amdahl. Bagian non-paralel dari program (waktu Input dan Output, yang meliputi transfer data ke dan dari GPU) membatasi percepatan total yang dapat dicapai. Walaupun kernelnya super cepat, program harus menunggu proses Input/Output yang berjalan secara serial.
+    - Rendahnya SpeedUp total meskipun SpeedUp kernel sangat tinggi adalah fenomena yang dijelaskan oleh Hukum Amdahl. Bagian non-paralel dari program (waktu Input dan Output, yang meliputi transfer data ke dan dari GPU) membatasi percepatan total yang dapat dicapai. Walaupun kernelnya super cepat, program harus menunggu proses Input/Output yang berjalan secara serial.
 * **Optimasi Shared Memory (SpeedUp Kernel)**
-Secara umum, penggunaan shared memory (shared-d dan shared-s) menghasilkan SpeedUp kernel yang lebih tinggi daripada versi raw untuk citra besar (fish.jpg: 34.071 x vs 29.812 x; view.jpg: 21.333 x vs 12.8 x). Hal ini membuktikan bahwa shared memory efektif mengurangi latency memori global dan meningkatkan kinerja kernel pemrosesan citra yang bersifat memory-bound (membutuhkan akses berulang ke data tetangga, seperti filter Sobel).
+    - Secara umum, penggunaan shared memory (shared-d dan shared-s) menghasilkan SpeedUp kernel yang lebih tinggi daripada versi raw untuk citra besar (fish.jpg: 34.071 x vs 29.812 x; view.jpg: 21.333 x vs 12.8 x). Hal ini membuktikan bahwa shared memory efektif mengurangi latency memori global dan meningkatkan kinerja kernel pemrosesan citra yang bersifat memory-bound (membutuhkan akses berulang ke data tetangga, seperti filter Sobel).
 * **Optimasi Ukuran Blok (SpeedUp Kernel)**
-Ukuran blok optimal (-d) seringkali menghasilkan SpeedUp kernel tertinggi (fish.jpg shared-d 34.071 x dan view.jpg shared-d 21.333 x), tetapi tidak selalu (misalnya, snake.jpg terbaik adalah shared-s 9.833 x). Hal ini menunjukkan bahwa ukuran blok optimal yang sebenarnya dapat bervariasi tergantung pada spesifik arsitektur GPU dan karakteristik citra masukan, meskipun penentuan ukuran blok yang optimal secara dinamis atau berdasarkan eksperimen (seperti 32 x 16$) cenderung memberikan hasil yang lebih baik atau sebanding.
+    - Ukuran blok optimal (-d) seringkali menghasilkan SpeedUp kernel tertinggi (fish.jpg shared-d 34.071 x dan view.jpg shared-d 21.333 x), tetapi tidak selalu (misalnya, snake.jpg terbaik adalah shared-s 9.833 x). Hal ini menunjukkan bahwa ukuran blok optimal yang sebenarnya dapat bervariasi tergantung pada spesifik arsitektur GPU dan karakteristik citra masukan, meskipun penentuan ukuran blok yang optimal secara dinamis atau berdasarkan eksperimen (seperti 32 x 16$) cenderung memberikan hasil yang lebih baik atau sebanding.
 
----
+
 
 ## 5. Discussion
 Q:
@@ -347,7 +349,6 @@ A:
 - **Overhead Membatasi SpeedUp Total:** Tingginya overhead I/O dan transfer data serial membatasi SpeedUp total (all program) menjadi hanya 1 x hingga 2.4 x (Hukum Amdahl), jauh lebih rendah daripada SpeedUp kernel (34 x).
 - **Overhead Relatif pada Kasus Kecil:** Untuk citra kecil (birds.jpg), overhead peluncuran kernel dan transfer data relatif besar dibandingkan waktu komputasi serial yang singkat, menyebabkan peningkatan kinerja total minimal atau bahkan SpeedUp kernel di bawah 1 x.
 
----
 
 
 ## 6. Conclusion
@@ -355,17 +356,22 @@ A:
 - **Peningkatan Kinerja:** Signifikan pada waktu pemrosesan saja, dengan SpeedUp kernel mencapai hingga 34 x. Optimasi Shared Memory memberikan efisiensi tambahan yang terukur.
 - **Tradeoff Komputasi vs. Overhead:** Terdapat tradeoff besar di mana overhead transfer data serial CPU-GPU dan I/O membatasi SpeedUp total program. Akibat bottleneck serial ini (sesuai Hukum Amdahl), SpeedUp total program hanya mencapai 1 x hingga 2.4 x, jauh di bawah potensi percepatan komputasi.
 
----
+
 
 ## 7. References
-[Materi Kuliah Sisparter ITB - GPU Intro](https://cdn-edunex.itb.ac.id/38097-Parallel-and-Distributed-Systems-Parallel-Class/73157-GPU/1645584641212_IF3230-06a-GPU-2022.pdf)
-[Materi Kuliah Sisparter ITB - GPU In a Nutshell](https://cdn-edunex.itb.ac.id/38097-Parallel-and-Distributed-Systems-Parallel-Class/73157-GPU/1645584666556_IF-3230-07-GPU-01-2022.pdf)
+1. [Materi Kuliah Sisparter ITB - GPU Intro](https://cdn-edunex.itb.ac.id/38097-Parallel-and-Distributed-Systems-Parallel-Class/73157-GPU/1645584641212_IF3230-06a-GPU-2022.pdf)
+2. [Materi Kuliah Sisparter ITB - GPU In a Nutshell](https://cdn-edunex.itb.ac.id/38097-Parallel-and-Distributed-Systems-Parallel-Class/73157-GPU/1645584666556_IF-3230-07-GPU-01-2022.pdf)
 
 ---
 
 ## 8. How to Run
 
 ### 8.1 Requirements
+
+- NVDIA GPU dan NVDIA GPU Driver v12.8 atau lebih baru ([buy here](https://www.tokopedia.com/find/rtx-4050-nvidia))
+- CUDA toolkit v12.8 ([install here](https://developer.nvidia.com/cuda-12-8-1-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu))
+- OpenCV 4 (bisa diinstal melalui package manager seperti `sudo apt install libopencv-dev` di Linux)
+- G++ dengan dukungan C++17
 
 ### 8.2 Compilation
 
@@ -377,11 +383,37 @@ chmod +x barracuda
 ### 8.3 Run Command
 
 ``` bash
-./barracuda [raw|shared] [d|s] [n] input.jpg output.jpg > output.txt
-# Keterangan:
-# raw   = tanpa shared memory
-# shared= dengan shared memory
-# d     = optimized block dimension (determined at runtime)
-# s     = static block dimension (16 x 16)
-# n     = mode (>= 0)
+./barracuda [raw|shared] [d|s] [mode] [input.jpg] [output.jpg] > [output.txt]
+```
+**Keterangan:**
+- `[raw|shared]`
+    Tipe strategi paralelisasi CUDA yang ingin digunakan
+    - `raw`: tanpa shared memory
+    - `shared`: dengan shared memory
+- `[d|s]`
+    Cara penentuan gridDim dan dimBlock
+    - `d`: optimized block dimension (determined at runtime)
+    - `s`: static block dimension (16 x 16)
+
+- `[mode]`  
+    Menentukan mode operasi **Sobel Edge Detection**, yang memengaruhi bentuk hasil keluaran:
+    - `0` : **Grayscale Gradient** — menampilkan magnitudo tepi dalam skala abu-abu.  
+    - `1` : **Binary Threshold** — hasil hitam-putih berdasarkan ambang intensitas tertentu.  
+    - `n ≥ 2` : **Multi-Level Threshold** — menghasilkan lebih dari dua tingkat tepi berdasarkan ambang bertingkat.
+
+- `[input.jpg]`  
+    Path menuju gambar input, misalnya:  
+    `test_case/birds.jpg`
+
+- `[output.jpg]`  
+    Nama file hasil keluaran, misalnya:  
+    `birds_out.jpg`
+
+- `> output.txt` *(opsional)*  
+    Digunakan untuk mengalihkan (redirect) log hasil waktu eksekusi dan konfigurasi ke dalam file teks.
+
+
+**Contoh Penggunaan**
+```bash
+./barracuda shared d 0 ../test_case/birds.jpg birds_out.jpg > birds_log.txt
 ```
