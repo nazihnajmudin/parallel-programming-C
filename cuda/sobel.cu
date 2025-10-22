@@ -1,6 +1,8 @@
 #include "header/cuda.h"
 #include "header/image.h"
 
+#include <chrono>
+
 cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3 *dim_block, unsigned char cuda_type) {
     
     cudaExecTime_t result;
@@ -8,10 +10,12 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
     result.malloc_time = 0;
     result.memcpy_time = 0;
     result.cufree_time = 0;
+    result.cuda_events = 0;
     
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
+    cudaEventRecord(start);
     
     unsigned char *d_p, *d_p_out;
     int *d_arr_thresholds;
@@ -21,18 +25,17 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
     
     
     // GPU Memory Allocation
-    cudaEventRecord(start);
+    auto malloc_start = std::chrono::high_resolution_clock::now();
     CUDA_CHECK(cudaMalloc((void**)&d_p, size_p));
     CUDA_CHECK(cudaMalloc((void**)&d_p_out, size_p));
     CUDA_CHECK(cudaMalloc((void**)&d_arr_thresholds, max(mode, 1) * sizeof(int)));
+    auto malloc_stop = std::chrono::high_resolution_clock::now();
     cudaEventRecord(stop);
-    
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&result.malloc_time, start, stop);
+    result.malloc_time = std::chrono::duration_cast<std::chrono::milliseconds>(malloc_stop-malloc_start).count();
     
     
     // Copy image data and params
-    cudaEventRecord(start);
+    auto memcpy_start = std::chrono::high_resolution_clock::now();
     unsigned char *h_pinned;
     
     CUDA_CHECK(cudaMallocHost((void**)&h_pinned, size_p));
@@ -40,10 +43,8 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
     CUDA_CHECK(cudaMemcpyAsync(d_p, h_pinned, size_p, cudaMemcpyHostToDevice));
     
     CUDA_CHECK(cudaMemcpy(d_arr_thresholds, h_arr_thresholds, mode * sizeof(int), cudaMemcpyHostToDevice));
-    cudaEventRecord(stop);
-
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&result.memcpy_time, start, stop);
+    auto memcpy_stop = std::chrono::high_resolution_clock::now();
+    result.memcpy_time = std::chrono::duration_cast<std::chrono::milliseconds>(memcpy_stop-memcpy_start).count();
     
     
     dim3 grid(  (h_img->w + BLOCK_SIZE - 1) / BLOCK_SIZE,
@@ -51,7 +52,7 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
     dim3 block(BLOCK_SIZE, BLOCK_SIZE);
     
     // Kernel launch
-    cudaEventRecord(start);
+    auto kernel_start = std::chrono::high_resolution_clock::now();
     if (cuda_type =='r') {          // cuda_raw
         kernel_sobel_raw<<<*dim_grid, *dim_block>>>(d_p, d_p_out, h_img->w, h_img->h, mode, d_arr_thresholds);
     } else if (cuda_type == 's') {  // cuda_raw 16 x 16
@@ -63,38 +64,38 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
     }
     // CUDA_CHECK(cudaGetLastError());         // Check launch errors
     // CUDA_CHECK(cudaDeviceSynchronize());    // Check execution errors <-- katanya ini memperlambat
-    cudaEventRecord(stop);
-
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&result.kernel_time, start, stop);
+    auto kernel_stop = std::chrono::high_resolution_clock::now();
+    result.kernel_time = std::chrono::duration_cast<std::chrono::milliseconds>(kernel_stop-kernel_start).count();
     
-
+    
     // Copy back results
-    cudaEventRecord(start);
+    auto add_memcpy_start = std::chrono::high_resolution_clock::now();
     CUDA_CHECK(cudaMemcpy(h_pinned, d_p_out, size_p, cudaMemcpyDeviceToHost));
     memcpy(h_img->p, h_pinned, size_p);
     CUDA_CHECK(cudaFreeHost(h_pinned));
-    cudaEventRecord(stop);
-
-    cudaEventSynchronize(stop);
-    float memcpy_time_temp = result.memcpy_time;
-    cudaEventElapsedTime(&memcpy_time_temp, start, stop);
-    result.memcpy_time += memcpy_time_temp;
+    auto add_memcpy_stop = std::chrono::high_resolution_clock::now();
+    result.memcpy_time += std::chrono::duration_cast<std::chrono::milliseconds>(add_memcpy_stop-add_memcpy_start).count();
     
     
     // Free device memory
+    auto cufree_start = std::chrono::high_resolution_clock::now();
     cudaEventRecord(start);
     CUDA_CHECK(cudaFree(d_arr_thresholds));
     CUDA_CHECK(cudaFree(d_p));
     CUDA_CHECK(cudaFree(d_p_out));
-    cudaEventRecord(stop);
-
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&result.cufree_time, start, stop);
+    auto cufree_stop = std::chrono::high_resolution_clock::now();
+    result.cufree_time = std::chrono::duration_cast<std::chrono::milliseconds>(cufree_stop-cufree_start).count();
     
-
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&result.cuda_events, start, stop);
+    
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
-
+    
     return result;
+}
+
+float total_cuda_time(cudaExecTime_t *c) {
+    return c->kernel_time + c->malloc_time + c->memcpy_time + c->cufree_time;
 }

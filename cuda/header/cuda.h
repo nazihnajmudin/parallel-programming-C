@@ -22,7 +22,9 @@ struct cudaExecTime_t {
     float malloc_time;
     float memcpy_time;
     float cufree_time;
+    float cuda_events;
 };
+float total_cuda_time(cudaExecTime_t *c);
 
 /* ALGORITMA SOBEL */
 cudaExecTime_t sobel(image_t *h_img, int h_mode, int *h_arr_thresholds, dim3 *grid_dim, dim3 *dim_block, unsigned char cuda_type);

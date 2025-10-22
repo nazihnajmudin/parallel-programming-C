@@ -89,27 +89,25 @@ int main(int argc,char*argv[]){
         std::cout << "\n";
     }
     std::cout << "------------------------------------------------------\n";
-    std::cout << "Timing (ms)\n";
-    std::cout << "  Input      : " << tInput  << "\n";
-    std::cout << "  Processing : " << tProc   << "\n";
-    std::cout << "  Output     : " << tOutput << "\n";
+    std::cout << "CUDA Event Benchmark (cudaEvent)\n";
+    std::cout << "  Total Time : " << sobel_time.cuda_events << " ms\n";
     std::cout << "------------------------------------------------------\n";
-    std::cout << "CUDA benchmark (ms)\n";
-    std::cout << "  Kernel     : " << sobel_time.kernel_time << "\n";
-    std::cout << "  Malloc     : " << sobel_time.malloc_time << "\n";
-    std::cout << "  Memcpy     : " << sobel_time.memcpy_time << "\n";
-    std::cout << "  Free       : " << sobel_time.cufree_time << "\n";
+    std::cout << "Timing (chrono)\n";
+    std::cout << "  Input      : " << tInput  << " ms\n";
+    std::cout << "  Processing : " << tProc   << " ms\n";
+    std::cout << "  Output     : " << tOutput << " ms\n";
     std::cout << "------------------------------------------------------\n";
-    std::cout << "Benchmarking & Other Services (ms)\n";
-    std::cout << "  = Processing - TotalCUDAbenchmark\n";
-    std::cout << "  = " << tProc << " - " << (  sobel_time.kernel_time +
-                                                sobel_time.malloc_time +
-                                                sobel_time.memcpy_time + 
-                                                sobel_time.cufree_time) << "\n";
-    std::cout << "  = " <<  (tProc-(sobel_time.kernel_time
-                                    +sobel_time.malloc_time
-                                    +sobel_time.memcpy_time 
-                                    +sobel_time.cufree_time)) << "\n";
+    std::cout << "Actual Processing Detail (chrono)\n";
+    std::cout << "  Kernel     : " << sobel_time.kernel_time << " ms\n";
+    std::cout << "  Malloc     : " << sobel_time.malloc_time << " ms\n";
+    std::cout << "  Memcpy     : " << sobel_time.memcpy_time << " ms\n";
+    std::cout << "  Free       : " << sobel_time.cufree_time << " ms\n";
+    std::cout << "  Total      : " << total_cuda_time(&sobel_time) << " ms\n";
+    std::cout << "------------------------------------------------------\n";
+    std::cout << "Benchmarking & Other Services (chrono)\n";
+    std::cout << "  = Processing - Total_Actual_Process\n";
+    std::cout << "  = " << tProc << " - " << total_cuda_time(&sobel_time) << "\n";
+    std::cout << "  = " << (tProc - total_cuda_time(&sobel_time)) << " ms\n";
     std::cout << "======================================================\n";
 
     // Bebaskan Memori
