@@ -1,0 +1,27 @@
+
+================ Sobel Edge Detection ================
+Program Type : CUDA
+------------------------------------------------------
+Mode         : 0
+Image size   : w = 1000 h = 750
+------------------------------------------------------
+CUDA Event Benchmark (cudaEvent)
+  Total Time : 10.5068 ms
+------------------------------------------------------
+Timing (chrono)
+  Input      : 113 ms
+  Processing : 501 ms
+  Output     : 103 ms
+------------------------------------------------------
+Actual Processing Detail (chrono)
+  Malloc     : 1 ms
+  Memcpy     : 4 ms
+  Kernel     : 2 ms
+  Free       : 0 ms
+  Total      : 7 ms
+------------------------------------------------------
+Benchmarking & Other Services (chrono)
+  = Processing - Total_Actual_Process
+  = 501 - 7
+  = 494 ms
+======================================================

@@ -21,7 +21,7 @@ OBJECTS = $(patsubst %.cu,$(BIN_DIR)/%.o,$(SOURCES))
 HEADER_DIR = header
 
 # Executable name
-TARGET = main
+TARGET = barracuda
 
 # Default target
 all: $(TARGET)
@@ -42,8 +42,8 @@ $(BIN_DIR):
 clean:
 	rm -f $(BIN_DIR)/*.o $(TARGET)
 
-run:
-	./main 0 ../test_cases/fish.jpg fish-0.jpg > output.txt
+clear:
+	rm -rf ./output
 
 # Phony targets
 .PHONY: all clean run

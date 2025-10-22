@@ -27,7 +27,7 @@
 8. [References](#8-references)  
 9. [How to Run](#9-how-to-run)  
 
-
+---
 
 ## 1. Introduction
 Tugas ini bertujuan untuk mengimplementasikan paralelisasi algoritma Sobel Edge Detection menggunakan CUDA. Sobel Edge Detection adalah algoritma pengolahan citra yang digunakan untuk mendeteksi tepi (edge) pada gambar dengan menerapkan operator konvolusi menggunakan kernel Sobel.
@@ -36,6 +36,7 @@ Algoritma Sobel bekerja dengan menghitung gradien intensitas gambar menggunakan 
 
 Tujuan dari penerapan paralelisasi dengan CUDA adalah untuk meningkatkan performa komputasi dengan memanfaatkan GPU. CUDA memungkinkan pembagian beban kerja komputasi setiap pixel secara paralel, sehingga harapannya waktu pemrosesan dapat berkurang secara signifikan dibandingkan dengan implementasi serial.
 
+---
 
 ## 2. Theory: Parallelizable Operations
 Pada kasus ini, operasi dan fungsi yang dapat diparalelisasi adalah:
@@ -43,6 +44,7 @@ Pada kasus ini, operasi dan fungsi yang dapat diparalelisasi adalah:
 - Perhitunagn gradien dan threshold dapat dihitung secara paralel karena setiap piksel bersifat independen.  
 - Grayscaling gambar sebetulnya juga dapat diparalelisasi, tetapi kata asisten harus pakai cv::IMREAD_GRAYSCALE
 
+---
 
 ## 3. Code Changes and Implementation
 ### 3.1 Parallelization Strategy
@@ -207,69 +209,179 @@ __global__ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigne
     int g = (int)sqrtf((float)(ver*ver + hor*hor));
 ```
 
+---
+
 ## 4. Results and Evaluation
 
 ### 4.1 Correctness
 
-| Input Image | Serial Output | Parallel Output |
-|-------------|---------------|-----------------|
-| ![input](path/to/input.jpg) | ![serial](path/to/serial_output.jpg) | ![parallel](path/to/parallel_output.jpg) |
-
+| Input Image | Serial        | CUDA (biasa)    | CUDA (shared 16x16) | CUDA (shared optimized block dim) |
+|-------------|---------------|-----------------|---------------------|-----------------------------------|
+| ![input](../test_cases/birds.jpg) | ![serial](output/jpg/serial-birds-0.jpg) | ![cuda](output/jpg/cuda-birds-raw-d-0.jpg) | ![cuda](output/jpg/cuda-birds-shared-s-0.jpg) | ![cuda](output/jpg/cuda-birds-shared-d-0.jpg) |
+| ![input](../test_cases/fish.jpg) | ![serial](output/jpg/serial-fish-0.jpg) | ![cuda](output/jpg/cuda-fish-raw-d-0.jpg) | ![cuda](output/jpg/cuda-fish-shared-s-0.jpg) | ![cuda](output/jpg/cuda-fish-shared-d-0.jpg) |
+| ![input](../test_cases/lion.jpg) | ![serial](output/jpg/serial-lion-0.jpg) | ![cuda](output/jpg/cuda-lion-raw-d-0.jpg) | ![cuda](output/jpg/cuda-lion-shared-s-0.jpg) | ![cuda](output/jpg/cuda-lion-shared-d-0.jpg) |
+| ![input](../test_cases/snake.jpg) | ![serial](output/jpg/serial-snake-0.jpg) | ![cuda](output/jpg/cuda-snake-raw-d-0.jpg) | ![cuda](output/jpg/cuda-snake-shared-s-0.jpg) | ![cuda](output/jpg/cuda-snake-shared-d-0.jpg) |
+| ![input](../test_cases/view.jpg) | ![serial](output/jpg/serial-view-0.jpg) | ![cuda](output/jpg/cuda-view-raw-d-0.jpg) | ![cuda](output/jpg/cuda-view-shared-s-0.jpg) | ![cuda](output/jpg/cuda-view-shared-d-0.jpg) |
 
 
 ### 4.2 Performance Comparison
 
 #### Serial Version
-| Image Name | Input Time (ms) | Processing Time (ms) | Output Time (ms) | Total Time (ms) |
-|------------|-----------------|-----------------------|------------------|-----------------|
-| image1.jpg |                 |                       |                  |                 |
-| image2.jpg |                 |                       |                  |                 |
-| image3.jpg |                 |                       |                  |                 |
+
+| Image Name   |   Input Time (ms) |   Processing Time (ms) |   Output Time (ms) |   Total Time (ms) |
+|:-------------|------------------:|-----------------------:|-------------------:|------------------:|
+| birds.jpg    |                65 |                      4 |                 23 |                92 |
+| fish.jpg     |               273 |                    477 |                489 |              1239 |
+| lion.jpg     |                32 |                     47 |                 90 |               169 |
+| snake.jpg    |                87 |                     59 |                143 |               289 |
+| view.jpg     |                85 |                    128 |                222 |               435 |
+
 
 #### Parallel Version
-| Image Name | Core Number | Input Time (ms) | Processing Time (ms) | Output Time (ms) | Total Time (ms) |
-|------------|-------------|-----------------|-----------------------|------------------|-----------------|
-| image1.jpg | 2           |                 |                       |                  |                 |
-| image1.jpg | 4           |                 |                       |                  |                 |
-| image1.jpg | 8           |                 |                       |                  |                 |
-| image2.jpg | 2           |                 |                       |                  |                 |
-| image2.jpg | 4           |                 |                       |                  |                 |
-| image2.jpg | 8           |                 |                       |                  |                 |
 
+| Image Name   | Kernel Type   |   Input Time (ms) |   Processing Time (ms) |   Output Time (ms) |   Total Time (ms) |
+|:-------------|:--------------|------------------:|-----------------------:|-------------------:|------------------:|
+| birds.jpg    | raw-d         |                18 |                     10 |                 24 |                52 |
+| birds.jpg    | raw-s         |                24 |                      9 |                 17 |                50 |
+| birds.jpg    | shared-d      |                12 |                     16 |                 22 |                50 |
+| birds.jpg    | shared-s      |                21 |                      9 |                 13 |                43 |
+| fish.jpg     | raw-d         |               203 |                     26 |                637 |               866 |
+| fish.jpg     | raw-s         |               220 |                     16 |                440 |               676 |
+| fish.jpg     | shared-d      |               279 |                     14 |                557 |               850 |
+| fish.jpg     | shared-s      |               304 |                     37 |                449 |               790 |
+| lion.jpg     | raw-d         |                34 |                     17 |                100 |               151 |
+| lion.jpg     | raw-s         |                14 |                      6 |                 48 |                68 |
+| lion.jpg     | shared-d      |                28 |                     15 |                116 |               159 |
+| lion.jpg     | shared-s      |                35 |                      9 |                 99 |               143 |
+| snake.jpg    | raw-d         |                97 |                     10 |                147 |               254 |
+| snake.jpg    | raw-s         |               113 |                      7 |                103 |               223 |
+| snake.jpg    | shared-d      |                56 |                      8 |                113 |               177 |
+| snake.jpg    | shared-s      |                88 |                      6 |                 69 |               163 |
+| view.jpg     | raw-d         |                65 |                     14 |                104 |               183 |
+| view.jpg     | raw-s         |                94 |                     10 |                164 |               268 |
+| view.jpg     | shared-d      |               162 |                      6 |                140 |               308 |
+| view.jpg     | shared-s      |                87 |                      9 |                165 |               261 |
+
+**Keterangan:**
+- raw = tanpa shared memory
+- shared = dengan shared memory
+- d = block size ditentukan saat runtime dengan get_optimal_config (NVIDIA RTX 4050 = 32 x 16)
+- s = block size ditentukan di awal = 16 x 16
 
 
 ### 4.3 Speedup and Efficiency
 - **Speedup** = Serial Time / Parallel Time  
 - **Efficiency** = Speedup / Number of Processes  
 
+| Image Type   | Kernel Type   |   Serial Time |   Parallel Time |   SpeedUp (all program) |   Serial Proc Time |   Parallel Proc Time |   SpeedUp (sobel only) |
+|:-------------|:--------------|--------------:|----------------:|------------------------:|-------------------:|---------------------:|-----------------------:|
+| birds.jpg    | raw-d         |            92 |              52 |                   1.769 |                  4 |                   10 |                  0.4   |
+| birds.jpg    | raw-s         |            92 |              50 |                   1.84  |                  4 |                    9 |                  0.444 |
+| birds.jpg    | shared-d      |            92 |              50 |                   1.84  |                  4 |                   16 |                  0.25  |
+| birds.jpg    | shared-s      |            92 |              43 |                   2.14  |                  4 |                    9 |                  0.444 |
+| fish.jpg     | raw-d         |          1239 |             866 |                   1.431 |                477 |                   26 |                 18.346 |
+| fish.jpg     | raw-s         |          1239 |             676 |                   1.833 |                477 |                   16 |                 29.812 |
+| fish.jpg     | shared-d      |          1239 |             850 |                   1.458 |                477 |                   14 |                 34.071 |
+| fish.jpg     | shared-s      |          1239 |             790 |                   1.568 |                477 |                   37 |                 12.892 |
+| lion.jpg     | raw-d         |           169 |             151 |                   1.119 |                 47 |                   17 |                  2.765 |
+| lion.jpg     | raw-s         |           169 |              68 |                   2.485 |                 47 |                    6 |                  7.833 |
+| lion.jpg     | shared-d      |           169 |             159 |                   1.063 |                 47 |                   15 |                  3.133 |
+| lion.jpg     | shared-s      |           169 |             143 |                   1.182 |                 47 |                    9 |                  5.222 |
+| snake.jpg    | raw-d         |           289 |             254 |                   1.138 |                 59 |                   10 |                  5.9   |
+| snake.jpg    | raw-s         |           289 |             223 |                   1.296 |                 59 |                    7 |                  8.429 |
+| snake.jpg    | shared-d      |           289 |             177 |                   1.633 |                 59 |                    8 |                  7.375 |
+| snake.jpg    | shared-s      |           289 |             163 |                   1.773 |                 59 |                    6 |                  9.833 |
+| view.jpg     | raw-d         |           435 |             183 |                   2.377 |                128 |                   14 |                  9.143 |
+| view.jpg     | raw-s         |           435 |             268 |                   1.623 |                128 |                   10 |                 12.8   |
+| view.jpg     | shared-d      |           435 |             308 |                   1.412 |                128 |                    6 |                 21.333 |
+| view.jpg     | shared-s      |           435 |             261 |                   1.667 |                128 |                    9 |                 14.222 |
 
+### 4.4 Observations
+
+#### Correctness
+Semua output paralel identik dengan hasil serial. Hal ini menunjukkan bahwa semua implementasi kernel CUDA (biasa, shared memory 16x16, dan shared memory optimized block dim) berfungsi dengan benar dan menghasilkan hasil edge detection Sobel yang sesuai dengan algoritma versi serial.
+#### Performance
+Perbandingan waktu menunjukkan bahwa versi Paralel (CUDA) secara konsisten lebih cepat dalam Processing Time (waktu pemrosesan kernel) dibandingkan dengan versi Serial, terutama untuk citra yang lebih besar/membutuhkan waktu pemrosesan serial yang lama.
+* **Pengurangan Waktu Pemrosesan Kernel**
+    - Pada citra fish.jpg (waktu pemrosesan serial tertinggi 477 ms), waktu pemrosesan paralel anjlok signifikan menjadi antara 14 ms hingga  37 ms.
+    - Pada citra view.jpg (waktu pemrosesan serial 128 ms), waktu pemrosesan paralel berada di antara 6 ms hingga 14 ms.
+    - Bahkan pada citra kecil - seperti birds.jpg (waktu pemrosesan serial hanya 4 ms), waktu pemrosesan paralel masih relatif kecil, meskipun percepatan totalnya tidak terlalu terlihat karena waktu serial yang sudah sangat singkat.
+* **Pengaruh Optimasi CUDA Kernel**
+    - Secara umum, implementasi shared dan raw menunjukkan waktu pemrosesan yang serupa, dengan shared seringkali sedikit lebih cepat atau sebanding (misalnya, fish.jpg shared-d 14 ms vs raw-s 16 ms, atau view.jpg shared-d 6 ms vs raw-d 14 ms).
+    - Untuk beberapa citra besar (fish.jpg, view.jpg), optimasi shared memory (shared-d atau shared-s) memberikan waktu pemrosesan kernel yang terendah, menunjukkan bahwa shared memory berhasil mengurangi latensi memori.
+    - Pengaruh ukuran blok (d optimal vs s 16 x 16) tidak konsisten. Misalnya, untuk fish.jpg, shared-d (14 ms) sedikit lebih cepat daripada shared-s (37 ms), sedangkan untuk view.jpg, shared-d (6 ms) jauh lebih cepat daripada shared-s (9 ms).
+* **Total Waktu Program**
+Total waktu program (Input + Processing + Output) untuk versi Paralel jauh lebih rendah daripada Serial untuk citra besar (fish.jpg: 1239 ms serial vs 676 ms paralel terbaik; view.jpg: 435 ms serial vs 183 ms paralel terbaik), namun masih didominasi oleh waktu Input dan Output (data transfer dari CPU ke GPU dan sebaliknya, serta loading/saving JPG).
+
+### 4.5 Analysis
+Perhitungan SpeedUp mengonfirmasi observasi performa, namun memberikan pemahaman lebih mendalam tentang efektivitas paralelisasi.
+* **SpeedUp**
+    - SpeedUp pada waktu pemrosesan kernel saja sangat besar, terutama pada citra yang lebih besar atau kompleks seperti fish.jpg, mencapai hingga 34.071 x (shared-d). Hal ini menunjukkan bahwa algoritma pemrosesan yang diparalelkan (filter Sobel) adalah bottleneck yang sangat efektif diparalelkan pada GPU.
+    - SpeedUp total program jauh lebih kecil, berkisar antara 1.063 x (lion.jpg, shared-d) hingga 2.485 x (lion.jpg, raw-s). Pada citra fish.jpg, SpeedUp total hanya 1.431 x hingga 1.833 x, meskipun SpeedUp kernelnya sangat tinggi.
+* **Pengaruh Hukum Amdahl**
+Rendahnya SpeedUp total meskipun SpeedUp kernel sangat tinggi adalah fenomena yang dijelaskan oleh Hukum Amdahl. Bagian non-paralel dari program (waktu Input dan Output, yang meliputi transfer data ke dan dari GPU) membatasi percepatan total yang dapat dicapai. Walaupun kernelnya super cepat, program harus menunggu proses Input/Output yang berjalan secara serial.
+* **Optimasi Shared Memory (SpeedUp Kernel)**
+Secara umum, penggunaan shared memory (shared-d dan shared-s) menghasilkan SpeedUp kernel yang lebih tinggi daripada versi raw untuk citra besar (fish.jpg: 34.071 x vs 29.812 x; view.jpg: 21.333 x vs 12.8 x). Hal ini membuktikan bahwa shared memory efektif mengurangi latency memori global dan meningkatkan kinerja kernel pemrosesan citra yang bersifat memory-bound (membutuhkan akses berulang ke data tetangga, seperti filter Sobel).
+* **Optimasi Ukuran Blok (SpeedUp Kernel)**
+Ukuran blok optimal (-d) seringkali menghasilkan SpeedUp kernel tertinggi (fish.jpg shared-d 34.071 x dan view.jpg shared-d 21.333 x), tetapi tidak selalu (misalnya, snake.jpg terbaik adalah shared-s 9.833 x). Hal ini menunjukkan bahwa ukuran blok optimal yang sebenarnya dapat bervariasi tergantung pada spesifik arsitektur GPU dan karakteristik citra masukan, meskipun penentuan ukuran blok yang optimal secara dinamis atau berdasarkan eksperimen (seperti 32 x 16$) cenderung memberikan hasil yang lebih baik atau sebanding.
+
+---
 
 ## 5. Discussion
+Q:
 - What worked well in your parallelization approach?  
 - What challenges did you face (data distribution, communication, synchronization)?  
 - Did you notice any overhead, and how did it affect performance?  
 
+A:
+### What worked well
+- **Keakuratan Terjamin:** Semua implementasi CUDA (raw, shared, berbagai ukuran blok) menghasilkan output yang identik dengan versi serial.
+- **Kinerja Kernel Superior:** Paralelisasi CUDA efektif mengurangi waktu komputasi inti (Sobel Filter). Dicapai SpeedUp kernel yang masif, hingga 34 x pada citra besar (fish.jpg).
+- **Efektivitas Optimasi Memori:** Penggunaan Shared Memory dan ukuran blok optimal (-d) memberikan SpeedUp kernel tertinggi pada kasus memory-bound (fish.jpg, view.jpg), membuktikan efisiensi tiling dalam mengurangi memory latency.
+
+### Challenges faced
+- **Dominasi Overhead Transfer Data:** Waktu yang diperlukan untuk transfer data CPU-GPU (malloc dan memcpy) serta operasi I/O file mendominasi total waktu program.
+- **Tuning Strategi Tiling:** Meskipun shared memory efektif, agar mendapatkan hasil pencarian ukuran blok dan strategi tiling yang paling optimal, dibutuhkan tuning ekstensif karena efisiensi bervariasi antar citra dan konfigurasi.
+
+### Overhead and its impact
+- **Overhead Membatasi SpeedUp Total:** Tingginya overhead I/O dan transfer data serial membatasi SpeedUp total (all program) menjadi hanya 1 x hingga 2.4 x (Hukum Amdahl), jauh lebih rendah daripada SpeedUp kernel (34 x).
+- **Overhead Relatif pada Kasus Kecil:** Untuk citra kecil (birds.jpg), overhead peluncuran kernel dan transfer data relatif besar dibandingkan waktu komputasi serial yang singkat, menyebabkan peningkatan kinerja total minimal atau bahkan SpeedUp kernel di bawah 1 x.
+
+---
 
 
 ## 6. Conclusion
-Summarize your findings:  
-- Was parallelization effective?  
-- Did it improve performance significantly?  
-- Any tradeoffs between computation speed and communication overhead?  
+- **Efektivitas Paralelisasi:** Sangat efektif untuk komputasi inti (kernel processing). Semua implementasi CUDA menunjukkan akurasi fungsional yang identik dengan versi serial.
+- **Peningkatan Kinerja:** Signifikan pada waktu pemrosesan saja, dengan SpeedUp kernel mencapai hingga 34 x. Optimasi Shared Memory memberikan efisiensi tambahan yang terukur.
+- **Tradeoff Komputasi vs. Overhead:** Terdapat tradeoff besar di mana overhead transfer data serial CPU-GPU dan I/O membatasi SpeedUp total program. Akibat bottleneck serial ini (sesuai Hukum Amdahl), SpeedUp total program hanya mencapai 1 x hingga 2.4 x, jauh di bawah potensi percepatan komputasi.
 
+---
 
+## 7. References
+[Materi Kuliah Sisparter ITB - GPU Intro](https://cdn-edunex.itb.ac.id/38097-Parallel-and-Distributed-Systems-Parallel-Class/73157-GPU/1645584641212_IF3230-06a-GPU-2022.pdf)
+[Materi Kuliah Sisparter ITB - GPU In a Nutshell](https://cdn-edunex.itb.ac.id/38097-Parallel-and-Distributed-Systems-Parallel-Class/73157-GPU/1645584666556_IF-3230-07-GPU-01-2022.pdf)
 
-## 7. Additional Notes (Optional)
-- Suggestions for further improvement (e.g., using hybrid MPI + OpenMP).  
-- Observations for different input sizes (small vs large images).  
-- Any optimizations beyond the basic parallelization.  
+---
 
+## 8. How to Run
 
+### 8.1 Requirements
 
-## 8. References
-List any references you used (books, lecture notes, research papers, or online sources).
+### 8.2 Compilation
 
+``` bash
+make
+chmod +x barracuda
+```
 
+### 8.3 Run Command
 
-## 9. How to Run
-How to run the programs (compiling and running process must atleast)
+``` bash
+./barracuda [raw|shared] [d|s] [n] input.jpg output.jpg > output.txt
+# Keterangan:
+# raw   = tanpa shared memory
+# shared= dengan shared memory
+# d     = optimized block dimension (determined at runtime)
+# s     = static block dimension (16 x 16)
+# n     = mode (>= 0)
+```

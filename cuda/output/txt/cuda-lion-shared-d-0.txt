@@ -1,0 +1,33 @@
+[Optimal CUDA Config]
+    GPU Model             : NVIDIA GeForce RTX 4050 Laptop GPU
+    Warp size             : 32
+    Threads/Block (target): 512
+    Grid Dimension        : (38, 40)
+    Block Dimension       : (32, 16)
+
+================ Sobel Edge Detection ================
+Program Type : CUDA
+------------------------------------------------------
+Mode         : 0
+Image size   : w = 1200 h = 628
+------------------------------------------------------
+CUDA Event Benchmark (cudaEvent)
+  Total Time : 18.7307 ms
+------------------------------------------------------
+Timing (chrono)
+  Input      : 28 ms
+  Processing : 267 ms
+  Output     : 116 ms
+------------------------------------------------------
+Actual Processing Detail (chrono)
+  Malloc     : 2 ms
+  Memcpy     : 5 ms
+  Kernel     : 8 ms
+  Free       : 0 ms
+  Total      : 15 ms
+------------------------------------------------------
+Benchmarking & Other Services (chrono)
+  = Processing - Total_Actual_Process
+  = 267 - 15
+  = 252 ms
+======================================================
