@@ -62,7 +62,7 @@ int main(int argc,char*argv[]){
     image_t img = loadJPG(inputFile);
     auto t1 = std::chrono::high_resolution_clock::now();
     
-    // Find best config
+    // Find best config (time not counted)
     dim3 dim_grid, dim_block;
     if (cuda_type=='r' || cuda_type=='d')
     get_optimal_config(img.w-2, img.h-2, &dim_grid, &dim_block);
@@ -98,9 +98,9 @@ int main(int argc,char*argv[]){
     std::cout << "  Output     : " << tOutput << " ms\n";
     std::cout << "------------------------------------------------------\n";
     std::cout << "Actual Processing Detail (chrono)\n";
-    std::cout << "  Kernel     : " << sobel_time.kernel_time << " ms\n";
     std::cout << "  Malloc     : " << sobel_time.malloc_time << " ms\n";
     std::cout << "  Memcpy     : " << sobel_time.memcpy_time << " ms\n";
+    std::cout << "  Kernel     : " << sobel_time.kernel_time << " ms\n";
     std::cout << "  Free       : " << sobel_time.cufree_time << " ms\n";
     std::cout << "  Total      : " << total_cuda_time(&sobel_time) << " ms\n";
     std::cout << "------------------------------------------------------\n";

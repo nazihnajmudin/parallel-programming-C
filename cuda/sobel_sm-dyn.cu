@@ -1,8 +1,7 @@
 #include "header/cuda.h"
 #include "header/image.h"
 
-__global__
-void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigned char* out,
+__global__ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigned char* out,
                         int w, int h, int mode, const int* d_thresholds) {
     const int BX = blockDim.x;
     const int BY = blockDim.y;

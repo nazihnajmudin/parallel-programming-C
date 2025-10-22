@@ -18,11 +18,11 @@
     } while (0)
 
 struct cudaExecTime_t {
-    float kernel_time;
-    float malloc_time;
-    float memcpy_time;
-    float cufree_time;
-    float cuda_events;
+    float kernel_time;  // sobel_kernel time
+    float malloc_time;  // cudaMalloc time
+    float memcpy_time;  // cudaMemcpy time
+    float cufree_time;  // cudaFree time
+    float cuda_events;  // cudaEventElapsed time using cudaEventRecord
 };
 float total_cuda_time(cudaExecTime_t *c);
 

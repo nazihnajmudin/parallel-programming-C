@@ -55,41 +55,161 @@ Strategi Optimasi Overhead:
 - Akses global memory diminimasi dengan membuat shared memory.
 
 ### 3.2 Code Modifications
-Paralelisasi ini mengubah perhitungan nested loop menjadi kernel CUDA. Sebagai eksperimen, terdapat 
+Paralelisasi ini mengubah perhitungan nested loop menjadi kernel CUDA. Serta mengubah perhitungan konvolusi menjadi unroll version.
 
-Example:
-
+Before:
 ```cpp
 // Serial version loop
-for (int y = 1; y < in.h - 1; y++) {
-    for (int x = 1; x < in.w - 1; x++) {
-        ...
+    int Gx[3][3]={{-1,0,1},{-2,0,2},{-1,0,1}};
+    int Gy[3][3]={{1,2,1},{0,0,0},{-1,-2,-1}};
+    Image out=in;
+
+    for(int y=1;y<in.h-1;y++){
+        for(int x=1;x<in.w-1;x++){
+            int sx=0, sy=0;
+            for(int ky=-1; ky<=1; ky++)
+                for(int kx=-1; kx<=1; kx++){
+                    int px=in.at(x+kx,y+ky);
+                    sx += px * Gx[ky+1][kx+1];
+                    sy += px * Gy[ky+1][kx+1];
+                }
+            int g = std::sqrt(sx*sx + sy*sy);
+
+            ...
+        }
     }
-}
 ```
-With this
+After:
 ``` cpp
-// Parallel version with MPI (row distribution example)
-int rowsPerProcess = in.h / world_size;
-int startRow = rank * rowsPerProcess;
-int endRow   = (rank == world_size - 1) ? in.h - 1 : (startRow + rowsPerProcess);
+// Parallel version with CUDA (sobel_kernel without shared memory)
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    if (x >= w || y >= h) return;
+    x++; y++;
 
-for (int y = startRow; y < endRow; y++) {
-    for (int x = 1; x < in.w - 1; x++) {
-        ...
+    // Convolution
+    int ver = 0, hor = 0;
+    if (x > 0 && x < w-1 && y > 0 && y < h-1) {
+        ver = in[(y+1)*w + (x-1)] + 2*in[(y+1)*w + x] + in[(y+1)*w + (x+1)]
+        - (in[(y-1)*w + (x-1)] + 2*in[(y-1)*w + x] + in[(y-1)*w + (x+1)]);
+        hor = in[(y-1)*w + (x+1)] + 2*in[y*w + (x+1)] + in[(y+1)*w + (x+1)]
+        - (in[(y-1)*w + (x-1)] + 2*in[y*w + (x-1)] + in[(y+1)*w + (x-1)]);
     }
-}
+    int g = (int)sqrtf(ver*ver + hor*hor);
 ```
-You may also include screenshots of modified sections and highlight the differences.
 
+Contoh diatas merupakan perubahan untuk tipe kernel cuda tanpa shared memory. Untuk implementasi shared memory, terdapat dua versi yaitu versi dengan static block size (16 x 16) dan versi dengan runtime block size (ditentukan oleh fungsi get_optimal_config yang mencari konfigurasi dimensi grid dan blok terbaik sesuai spesifikasi GPU)
+
+Static Block Sized Shared Memory Kernel:
+``` cpp
+__global__ void kernel_sobel_shared(unsigned char *in, unsigned char *out, int w, int h, int mode, int *d_thresholds) {
+    __shared__ unsigned char tile[BLOCK_SIZE + 2][BLOCK_SIZE + 2];
+
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
+    int x = blockIdx.x * BLOCK_SIZE + tx;
+    int y = blockIdx.y * BLOCK_SIZE + ty;
+
+    // Global index
+    int gx = min(max(x, 0), w - 1);
+    int gy = min(max(y, 0), h - 1);
+
+    // Load main pixel
+    tile[ty + 1][tx + 1] = in[gy * w + gx];
+
+    // Load halo region (edges of tile)
+    if (tx == 0 && gx > 0)
+        tile[ty + 1][0] = in[gy * w + gx - 1];
+    if (tx == BLOCK_SIZE - 1 && gx < w - 1)
+        tile[ty + 1][BLOCK_SIZE + 1] = in[gy * w + gx + 1];
+    if (ty == 0 && gy > 0)
+        tile[0][tx + 1] = in[(gy - 1) * w + gx];
+    if (ty == BLOCK_SIZE - 1 && gy < h - 1)
+        tile[BLOCK_SIZE + 1][tx + 1] = in[(gy + 1) * w + gx];
+
+    // Load corners (optional, for correctness)
+    if (tx == 0 && ty == 0 && gx > 0 && gy > 0)
+        tile[0][0] = in[(gy - 1) * w + gx - 1];
+    if (tx == BLOCK_SIZE - 1 && ty == 0 && gx < w - 1 && gy > 0)
+        tile[0][BLOCK_SIZE + 1] = in[(gy - 1) * w + gx + 1];
+    if (tx == 0 && ty == BLOCK_SIZE - 1 && gx > 0 && gy < h - 1)
+        tile[BLOCK_SIZE + 1][0] = in[(gy + 1) * w + gx - 1];
+    if (tx == BLOCK_SIZE - 1 && ty == BLOCK_SIZE - 1 &&
+        gx < w - 1 && gy < h - 1)
+        tile[BLOCK_SIZE + 1][BLOCK_SIZE + 1] = in[(gy + 1) * w + gx + 1];
+
+    __syncthreads();
+
+    // Skip border threads
+    if (x >= w || y >= h) return;
+
+    // Sobel filter (pakai tile)
+    int ver =
+        tile[ty + 2][tx] + 2 * tile[ty + 2][tx + 1] + tile[ty + 2][tx + 2] -
+        (tile[ty][tx] + 2 * tile[ty][tx + 1] + tile[ty][tx + 2]);
+    int hor =
+        tile[ty][tx + 2] + 2 * tile[ty + 1][tx + 2] + tile[ty + 2][tx + 2] -
+        (tile[ty][tx] + 2 * tile[ty + 1][tx] + tile[ty + 2][tx]);
+    int g = (int)sqrtf(ver * ver + hor * hor);
+```
+Optimize Block Sized Shared Memory Kernel:
+``` cpp
+__global__ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigned char* out,
+                        int w, int h, int mode, const int* d_thresholds) {
+    const int BX = blockDim.x;
+    const int BY = blockDim.y;
+    const int sW = BX + 2;   // shared width (cols)
+    const int sH = BY + 2;   // shared height (rows)
+    extern __shared__ unsigned char s[]; // size: sW * sH
+
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
+    int bx = blockIdx.x;
+    int by = blockIdx.y;
+
+    int x = bx * BX + tx;  // global x for this thread
+    int y = by * BY + ty;  // global y for this thread
+
+    int tid = ty * BX + tx;
+    int totalThreads = BX * BY;
+    int elems = sW * sH;
+
+    // Linearized load (each thread loads multiple elements of shared tile)
+    for (int i = tid; i < elems; i += totalThreads) {
+        int sm_y = i / sW;
+        int sm_x = i % sW;
+        int glob_x = bx * BX + (sm_x - 1); // -1 because sm_x=0 is left
+        int glob_y = by * BY + (sm_y - 1); // -1 because sm_y=0 is top
+
+        // clamp to image border
+        glob_x = (glob_x < 0) ? 0 : ( (glob_x >= w) ? (w-1) : glob_x );
+        glob_y = (glob_y < 0) ? 0 : ( (glob_y >= h) ? (h-1) : glob_y );
+
+        s[i] = in[glob_y * w + glob_x];
+    }
+
+    __syncthreads();
+
+    if (x >= w || y >= h) return;
+
+    // center in shared coords
+    int c_x = tx + 1;
+    int c_y = ty + 1;
+    // int idx_center = c_y * sW + c_x;
+
+    int ver =
+        s[(c_y+1)*sW + (c_x-1)] + 2*s[(c_y+1)*sW + c_x] + s[(c_y+1)*sW + (c_x+1)]
+      - (s[(c_y-1)*sW + (c_x-1)] + 2*s[(c_y-1)*sW + c_x] + s[(c_y-1)*sW + (c_x+1)]);
+    int hor =
+        s[(c_y-1)*sW + (c_x+1)] + 2*s[c_y*sW + (c_x+1)] + s[(c_y+1)*sW + (c_x+1)]
+      - (s[(c_y-1)*sW + (c_x-1)] + 2*s[c_y*sW + (c_x-1)] + s[(c_y+1)*sW + (c_x-1)]);
+
+    int g = (int)sqrtf((float)(ver*ver + hor*hor));
+```
 
 ## 4. Results and Evaluation
 
 ### 4.1 Correctness
-- Did the parallel version produce the same output image as the serial version?  
-- Show example input and output images for both versions.  
-
-Example (replace with actual images):
 
 | Input Image | Serial Output | Parallel Output |
 |-------------|---------------|-----------------|

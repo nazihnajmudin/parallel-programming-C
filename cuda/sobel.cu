@@ -6,9 +6,9 @@
 cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_grid, dim3 *dim_block, unsigned char cuda_type) {
     
     cudaExecTime_t result;
-    result.kernel_time = 0;
     result.malloc_time = 0;
     result.memcpy_time = 0;
+    result.kernel_time = 0;
     result.cufree_time = 0;
     result.cuda_events = 0;
     
@@ -22,7 +22,9 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
 
     size_t size_p = h_img->w * h_img->h * sizeof(unsigned char);
     size_t smem_size = (dim_block->x + 2) * (dim_block->y + 2) * sizeof(unsigned char);
-    
+    dim3 grid(  (h_img->w + BLOCK_SIZE - 1) / BLOCK_SIZE,
+    (h_img->h + BLOCK_SIZE - 1) / BLOCK_SIZE);
+    dim3 block(BLOCK_SIZE, BLOCK_SIZE);
     
     // GPU Memory Allocation
     auto malloc_start = std::chrono::high_resolution_clock::now();
@@ -30,7 +32,6 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
     CUDA_CHECK(cudaMalloc((void**)&d_p_out, size_p));
     CUDA_CHECK(cudaMalloc((void**)&d_arr_thresholds, max(mode, 1) * sizeof(int)));
     auto malloc_stop = std::chrono::high_resolution_clock::now();
-    cudaEventRecord(stop);
     result.malloc_time = std::chrono::duration_cast<std::chrono::milliseconds>(malloc_stop-malloc_start).count();
     
     
@@ -45,11 +46,6 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
     CUDA_CHECK(cudaMemcpy(d_arr_thresholds, h_arr_thresholds, mode * sizeof(int), cudaMemcpyHostToDevice));
     auto memcpy_stop = std::chrono::high_resolution_clock::now();
     result.memcpy_time = std::chrono::duration_cast<std::chrono::milliseconds>(memcpy_stop-memcpy_start).count();
-    
-    
-    dim3 grid(  (h_img->w + BLOCK_SIZE - 1) / BLOCK_SIZE,
-    (h_img->h + BLOCK_SIZE - 1) / BLOCK_SIZE);
-    dim3 block(BLOCK_SIZE, BLOCK_SIZE);
     
     // Kernel launch
     auto kernel_start = std::chrono::high_resolution_clock::now();
@@ -79,7 +75,6 @@ cudaExecTime_t sobel(image_t *h_img, int mode, int *h_arr_thresholds, dim3 *dim_
     
     // Free device memory
     auto cufree_start = std::chrono::high_resolution_clock::now();
-    cudaEventRecord(start);
     CUDA_CHECK(cudaFree(d_arr_thresholds));
     CUDA_CHECK(cudaFree(d_p));
     CUDA_CHECK(cudaFree(d_p_out));
