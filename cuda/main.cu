@@ -57,6 +57,7 @@ int main(int argc,char*argv[]){
             thresholds.push_back(threshold);
         }
     }
+    cudaFree(0);
 
     auto t0 = std::chrono::high_resolution_clock::now();
     image_t img = loadJPG(inputFile);

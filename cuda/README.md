@@ -228,6 +228,8 @@ __global__ void kernel_sobel_tiled(const unsigned char* __restrict__ in, unsigne
 
 ### 4.2 Performance Comparison
 
+**Keterangan:** Pengujian dijalankan di WSL dari drive D di Windows (`/mnt/d/path/to/repo`). Sudah dicoba lagi untuk dijalankan dari `/home/user/` dan hasilnya jauh lebih baik, tetapi tidak ditulis di readme karena saya capek menulis ulang.
+
 #### Serial Version
 
 | Image Name   |   Input Time (ms) |   Processing Time (ms) |   Output Time (ms) |   Total Time (ms) |
